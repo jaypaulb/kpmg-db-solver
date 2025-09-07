@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"os/signal"
 	"path/filepath"
 	"strings"
 	"syscall"
@@ -18,9 +19,29 @@ type InteractivePrompts struct {
 
 // NewInteractivePrompts creates a new interactive prompts instance
 func NewInteractivePrompts() *InteractivePrompts {
-	return &InteractivePrompts{
+	p := &InteractivePrompts{
 		reader: bufio.NewReader(os.Stdin),
 	}
+	
+	// Set up signal handler to restore terminal state on interrupt
+	p.setupSignalHandler()
+	
+	return p
+}
+
+// setupSignalHandler sets up a signal handler to restore terminal state on interrupt
+func (p *InteractivePrompts) setupSignalHandler() {
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+	
+	go func() {
+		<-c
+		// Restore terminal state
+		if term.IsTerminal(int(syscall.Stdin)) {
+			fmt.Print("\n")
+		}
+		os.Exit(1)
+	}()
 }
 
 // PromptForConfig prompts the user for all required configuration
@@ -141,6 +162,8 @@ func (p *InteractivePrompts) promptPassword(prompt string) string {
 			password, err := term.ReadPassword(int(syscall.Stdin))
 			if err != nil {
 				fmt.Printf("\nError reading password: %v\n", err)
+				// Ensure terminal is in a good state
+				fmt.Print("\n")
 				continue
 			}
 			fmt.Println() // New line after hidden input

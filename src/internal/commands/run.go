@@ -30,7 +30,7 @@ func NewRunCommand(cfg *config.Config) *RunCommand {
 // Execute runs the complete workflow sequentially
 func (cmd *RunCommand) Execute(cobraCmd *cobra.Command, args []string) error {
 	logger := logging.GetLogger()
-	
+
 	logger.Info("🚀 Starting KPMG DB Solver - Complete Workflow")
 	logger.Info("============================================================")
 
@@ -74,7 +74,7 @@ func (cmd *RunCommand) Execute(cobraCmd *cobra.Command, args []string) error {
 	// Step 2: Filesystem Scanning
 	logger.Info("")
 	logger.Info("💾 Step 2: Scanning local assets folder...")
-	
+
 	// Extract asset hashes for filesystem comparison
 	assetHashes := make([]string, len(uniqueAssets))
 	for i, asset := range uniqueAssets {
@@ -105,7 +105,7 @@ func (cmd *RunCommand) Execute(cobraCmd *cobra.Command, args []string) error {
 	// Step 3: Backup Search
 	logger.Info("")
 	logger.Info("🔍 Step 3: Searching for missing assets in backup folder...")
-	
+
 	searcher := backup.NewSearcher(cmd.config.Paths.BackupRootFolder)
 	backupSearchResult, err := searcher.SearchForAssets(missingAssets)
 	if err != nil {
@@ -121,10 +121,10 @@ func (cmd *RunCommand) Execute(cobraCmd *cobra.Command, args []string) error {
 		logger.Info("")
 		logger.Info("💾 Step 4: Restoring found assets...")
 		logger.Info("💾 Found %d missing assets in backup folder", len(backupSearchResult.FoundFiles))
-		
+
 		// Check if we should auto-restore or prompt
 		autoRestore := cmd.shouldAutoRestore()
-		
+
 		if autoRestore {
 			logger.Info("🔄 Auto-restoring assets (no user prompt)...")
 		} else {
@@ -165,7 +165,7 @@ func (cmd *RunCommand) Execute(cobraCmd *cobra.Command, args []string) error {
 	// Step 5: Report Generation
 	logger.Info("")
 	logger.Info("📋 Step 5: Generating reports...")
-	
+
 	// Create missing assets map for quick lookup
 	missingMap := make(map[string]bool)
 	for _, hash := range missingAssets {
@@ -196,12 +196,12 @@ func (cmd *RunCommand) Execute(cobraCmd *cobra.Command, args []string) error {
 	logger.Info("🔗 Total unique assets: %d", len(uniqueAssets))
 	logger.Info("📂 Local assets found: %d", len(scanResult.Files))
 	logger.Info("❌ Missing assets: %d", len(missingAssets))
-	
+
 	if backupSearchResult != nil {
 		logger.Info("💾 Assets found in backup: %d", len(backupSearchResult.FoundFiles))
 		logger.Info("❌ Assets still missing: %d", len(backupSearchResult.MissingHashes))
 	}
-	
+
 	if discoveryResult.ServerValidation != nil {
 		logger.Info("🔍 Server validation:")
 		logger.Info("   ✅ Assets exist on server: %d", discoveryResult.ServerValidation.ExistingAssets)

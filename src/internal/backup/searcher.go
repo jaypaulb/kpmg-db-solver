@@ -111,7 +111,7 @@ func (s *Searcher) searchBackupFolders(backupRoot string, missingSet map[string]
 		if entry.IsDir() && s.isBackupFolder(entry.Name()) {
 			backupPath := filepath.Join(backupRoot, entry.Name())
 			assetsPath := filepath.Join(backupPath, "assets")
-			
+
 			// Check if this backup folder has an assets subfolder
 			if s.pathExists(assetsPath) {
 				backupFolders = append(backupFolders, assetsPath)
@@ -172,7 +172,7 @@ func (s *Searcher) searchBackupFolder(backupRoot string, missingSet map[string]b
 				// If we can't calculate relative path, use just the filename
 				relPath = info.Name()
 			}
-			
+
 			backupFile := BackupFile{
 				Path:         path,
 				Hash:         hash,

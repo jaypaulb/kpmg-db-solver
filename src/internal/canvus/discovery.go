@@ -254,10 +254,11 @@ func validateAssetsOnServer(ctx context.Context, session *canvussdk.Session, ass
 	// Validate each unique asset
 	for hash, asset := range uniqueAssets {
 		logger.Verbose("Validating asset hash: %s (%s) for canvas: %s", hash, asset.WidgetType, asset.CanvasID)
+		logger.Verbose("   Hash length: %d characters", len(hash))
 		
 		// Try to get the asset from the server
 		// We need a canvas ID for the request, so we'll use the first canvas that has this asset
-		_, err := session.GetAssetByHash(ctx, asset.CanvasID, hash)
+		assetData, err := session.GetAssetByHash(ctx, asset.CanvasID, hash)
 		if err != nil {
 			// Asset doesn't exist on server or there's an error
 			result.MissingAssets++
@@ -271,6 +272,7 @@ func validateAssetsOnServer(ctx context.Context, session *canvussdk.Session, ass
 			result.ExistingAssets++
 			logger.Verbose("✅ Asset exists on server: %s (%s) - Hash: %s", 
 				asset.WidgetName, asset.WidgetType, hash)
+			logger.Verbose("   Asset data size: %d bytes", len(assetData))
 		}
 	}
 

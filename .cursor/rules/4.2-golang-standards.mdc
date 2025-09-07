@@ -1,0 +1,148 @@
+---
+description: Go development standards and best practices
+globs: *.go,go.mod,go.sum,Dockerfile
+---
+# 4.2 Go Development Standards
+
+## Quality Gates
+- All code must pass: `go fmt`, `go vet`, `golangci-lint run`, `go test ./...`
+- Test coverage >80% (use `go test -cover ./...`)
+- Documentation for all exported functions/types
+- Use Go conventions for naming and structure
+
+## Code Style & Structure
+- Follow Go Code Review Comments guidelines
+- Use `gofmt` for consistent formatting
+- Use meaningful variable and function names
+- Keep functions small and focused
+- Use conventional commits: `{type}({scope}): {description}`
+
+## Project Structure
+```
+project/
+├── cmd/
+│   └── myapp/
+│       └── main.go
+├── internal/
+│   ├── handler/
+│   ├── service/
+│   └── repository/
+├── pkg/
+│   └── utils/
+├── api/
+│   └── openapi.yaml
+├── go.mod
+├── go.sum
+├── Makefile
+└── README.md
+```
+
+## Documentation Standards
+- Document all exported functions, types, and constants
+- Use complete sentences starting with the name being documented
+- Include examples in godoc format
+- Keep documentation concise but complete
+
+```go
+// CalculateTotal calculates the total price including tax.
+// It returns an error if the price is negative.
+func CalculateTotal(price float64, taxRate float64) (float64, error) {
+    // implementation
+}
+```
+
+## Error Handling
+- Always handle errors explicitly
+- Use sentinel errors for expected error conditions
+- Wrap errors with context using `fmt.Errorf` or `errors.Wrap`
+- Return errors as the last return value
+- Use custom error types for complex error scenarios
+
+```go
+var ErrInvalidInput = errors.New("invalid input")
+
+func ProcessData(data string) error {
+    if data == "" {
+        return ErrInvalidInput
+    }
+    // process data
+    return nil
+}
+```
+
+## Testing Framework
+- Use standard `testing` package
+- Write table-driven tests for multiple scenarios
+- Use `testify` for assertions if needed
+- Mock external dependencies with interfaces
+- Use `go test -race` to detect race conditions
+
+```go
+func TestCalculateTotal(t *testing.T) {
+    tests := []struct {
+        name     string
+        price    float64
+        taxRate  float64
+        expected float64
+        wantErr  bool
+    }{
+        {"valid input", 100.0, 0.1, 110.0, false},
+        {"negative price", -10.0, 0.1, 0.0, true},
+    }
+
+    for _, tt := range tests {
+        t.Run(tt.name, func(t *testing.T) {
+            result, err := CalculateTotal(tt.price, tt.taxRate)
+            if tt.wantErr {
+                assert.Error(t, err)
+                return
+            }
+            assert.NoError(t, err)
+            assert.Equal(t, tt.expected, result)
+        })
+    }
+}
+```
+
+## Concurrency Best Practices
+- Use goroutines and channels for concurrent operations
+- Always handle goroutine lifecycle properly
+- Use context for cancellation and timeouts
+- Avoid shared mutable state; prefer channels
+- Use sync package primitives when channels aren't suitable
+
+## Security Best Practices
+- Never commit secrets or API keys
+- Use environment variables for configuration
+- Validate all inputs and sanitize outputs
+- Use HTTPS for all external communications
+- Implement proper authentication and authorization
+
+## Dependency Management
+- Use Go modules (`go mod`)
+- Pin dependency versions for reproducible builds
+- Keep dependencies minimal and well-justified
+- Regular security updates with `go list -m -u all`
+- Use `go mod tidy` to clean up unused dependencies
+
+## Performance Considerations
+- Use profiling tools (`go tool pprof`) to identify bottlenecks
+- Prefer slices over arrays for flexibility
+- Use string builder for string concatenation
+- Consider memory allocation patterns
+- Use benchmarks to measure performance improvements
+
+```go
+func BenchmarkCalculateTotal(b *testing.B) {
+    for i := 0; i < b.N; i++ {
+        CalculateTotal(100.0, 0.1)
+    }
+}
+```
+
+## Build and Deployment
+- Use Makefiles for build automation
+- Create multi-stage Docker builds for smaller images
+- Use Go build tags for conditional compilation
+- Set proper build flags for production (`-ldflags="-w -s"`)
+- Use Go modules for reproducible builds

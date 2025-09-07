@@ -1,0 +1,217 @@
+---
+description: MERN stack development standards and best practices
+globs: *.js,*.jsx,*.ts,*.tsx,package.json,*.json
+---
+# 4.3 MERN Stack Development Standards
+
+## Quality Gates
+- All code must pass: `eslint`, `prettier`, `typescript` (if using TS), `jest`
+- Test coverage >80% (use `npm run test -- --coverage`)
+- Component documentation and PropTypes/TypeScript interfaces
+- Use consistent code style across frontend and backend
+
+## Project Structure
+```
+mern-app/
+├── client/                 # React frontend
+│   ├── src/
+│   │   ├── components/
+│   │   ├── pages/
+│   │   ├── hooks/
+│   │   ├── services/
+│   │   ├── utils/
+│   │   └── App.jsx
+│   ├── public/
+│   └── package.json
+├── server/                 # Express backend
+│   ├── src/
+│   │   ├── controllers/
+│   │   ├── middleware/
+│   │   ├── models/
+│   │   ├── routes/
+│   │   └── server.js
+│   └── package.json
+└── package.json           # Root package.json for scripts
+```
+
+## MongoDB Best Practices
+- Use Mongoose for schema validation and object modeling
+- Implement proper indexing for query performance
+- Use aggregation pipelines for complex queries
+- Implement connection pooling and error handling
+- Never expose database credentials in code
+
+```javascript
+// User model example
+const userSchema = new mongoose.Schema({
+  email: { type: String, required: true, unique: true },
+  password: { type: String, required: true, minlength: 6 },
+  createdAt: { type: Date, default: Date.now }
+});
+
+userSchema.index({ email: 1 });
+```
+
+## Express.js Backend Standards
+- Use middleware for cross-cutting concerns (auth, logging, CORS)
+- Implement proper error handling with error middleware
+- Use environment variables for configuration
+- Implement request validation with libraries like Joi or express-validator
+- Use async/await for database operations
+
+```javascript
+// Controller example
+const createUser = async (req, res, next) => {
+  try {
+    const { email, password } = req.body;
+    const user = new User({ email, password });
+    await user.save();
+    res.status(201).json({ user: { id: user._id, email: user.email } });
+  } catch (error) {
+    next(error);
+  }
+};
+```
+
+## React Frontend Standards
+- Use functional components with hooks
+- Implement proper state management (Context API or Redux)
+- Use custom hooks for reusable logic
+- Implement proper error boundaries
+- Use React.memo for performance optimization when needed
+
+```jsx
+// Component example
+const UserProfile = ({ userId }) => {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const userData = await userService.getUser(userId);
+        setUser(userData);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUser();
+  }, [userId]);
+
+  if (loading) return <LoadingSpinner />;
+  if (error) return <ErrorMessage message={error} />;
+  if (!user) return <NotFound />;
+
+  return <UserCard user={user} />;
+};
+```
+
+## Node.js Backend Configuration
+- Use dotenv for environment variables
+- Implement proper logging with winston or similar
+- Use helmet for security headers
+- Implement rate limiting and request throttling
+- Use compression middleware for response optimization
+
+```javascript
+// Server setup example
+const express = require('express');
+const mongoose = require('mongoose');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
+const cors = require('cors');
+
+const app = express();
+
+// Security middleware
+app.use(helmet());
+app.use(cors({ origin: process.env.CLIENT_URL }));
+
+// Rate limiting
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100 // limit each IP to 100 requests per windowMs
+});
+app.use('/api', limiter);
+```
+
+## Authentication & Security
+- Use JWT for stateless authentication
+- Hash passwords with bcrypt
+- Implement proper CORS configuration
+- Validate and sanitize all inputs
+- Use HTTPS in production
+- Implement proper session management
+
+```javascript
+// JWT authentication middleware
+const authenticateToken = (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) {
+    return res.sendStatus(401);
+  }
+
+  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+    if (err) return res.sendStatus(403);
+    req.user = user;
+    next();
+  });
+};
+```
+
+## Testing Standards
+- Write unit tests for components and functions
+- Write integration tests for API endpoints
+- Use Jest and React Testing Library for frontend tests
+- Use supertest for API testing
+- Mock external dependencies and database calls
+
+```javascript
+// React component test
+test('renders user profile correctly', () => {
+  render(<UserProfile userId="123" />);
+  expect(screen.getByText(/loading/i)).toBeInTheDocument();
+});
+
+// API endpoint test
+describe('POST /api/users', () => {
+  test('creates a new user', async () => {
+    const userData = { email: 'test@example.com', password: 'password123' };
+    const response = await request(app)
+      .post('/api/users')
+      .send(userData)
+      .expect(201);
+
+    expect(response.body.user.email).toBe(userData.email);
+  });
+});
+```
+
+## Performance Optimization
+- Implement code splitting with React.lazy
+- Use React.memo for expensive components
+- Optimize database queries with proper indexing
+- Implement caching strategies (Redis for session store)
+- Use compression and minification for production builds
+- Implement lazy loading for images and routes
+
+## Error Handling
+- Implement global error handling in Express
+- Use error boundaries in React
+- Provide meaningful error messages to users
+- Log errors appropriately (exclude sensitive data)
+- Implement proper HTTP status codes
+
+## Deployment Best Practices
+- Use environment-specific configuration
+- Implement proper build processes
+- Use process managers like PM2 for Node.js
+- Implement health checks and monitoring
+- Use CDN for static assets
+- Implement proper backup strategies for MongoDB

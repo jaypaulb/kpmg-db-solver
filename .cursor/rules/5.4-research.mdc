@@ -1,0 +1,242 @@
+---
+description: Project inception, research, and design methodology for greenfield projects
+globs: docs/PRD.md,docs/TECH_STACK.md,docs/TASKS.md
+alwaysApply: false
+---
+
+# 5.4 Research & Design Methodology
+
+> Invoke when starting a new project from scratch with brief context.
+> AI acts as strategic consultant, asking targeted questions to extract project requirements.
+> Documentation (PRD, TECH_STACK, TASKS) is produced only at the final stage.
+
+---
+
+## 0 · Initial Context Gathering
+
+**User provides:** Brief project description or problem statement
+**AI responds with:** Strategic questions to understand the core problem
+
+### Discovery Questions Framework
+Ask not more than 20 questions adapting based on responses:
+
+**Problem Definition:**
+- What specific problem are you trying to solve?
+- Who experiences this problem and how often?
+- What happens if this problem isn't solved?
+- How are people currently handling this problem?
+
+**Stakeholder & Users:**
+- Who are the primary users of this solution?
+- Who else will be affected by or interact with this system?
+- Who has decision-making authority on this project?
+- What technical expertise exists on the team?
+
+---
+
+## 1 · Scope & Constraints Discovery
+
+**AI asks targeted questions to define project boundaries:**
+
+**Scope Questions:**
+- What are the core features this solution must have?
+- What features would be nice to have but aren't essential?
+- What is explicitly out of scope for this project?
+- How will you know this project is successful?
+
+**Constraint Questions:**
+- What's your timeline for this project?
+- What budget or resource constraints exist?
+- What technical constraints do you have (existing systems, platforms, etc.)?
+- Are there regulatory, security, or compliance requirements?
+
+---
+
+## 2 · Technical Requirements Deep Dive
+
+**AI explores technical needs through targeted questioning:**
+
+**Architecture Questions:**
+- How many users do you expect (now and in 2 years)?
+- What's your tolerance for downtime or performance issues?
+- Do you need real-time features or is eventual consistency okay?
+- What integrations with existing systems are required?
+
+**Technology Preferences:**
+- Do you have preferred programming languages or frameworks?
+- What deployment environment (cloud, on-premise, hybrid)?
+- What's your team's expertise and comfort level?
+- Are there organizational standards you must follow?
+
+---
+
+## 3 · Risk & Complexity Assessment
+
+**AI identifies potential challenges through probing questions:**
+
+**Risk Questions:**
+- What's the biggest risk to this project's success?
+- What assumptions are you making that might be wrong?
+- What external dependencies could block progress?
+- What happens if key team members become unavailable?
+
+**Complexity Questions:**
+- What parts of this project seem most challenging?
+- Where do you expect to need external expertise or research?
+- What integration points worry you most?
+- What performance or scale requirements are you unsure about?
+
+---
+
+## 4 · Validation & Synthesis
+
+**AI synthesizes all gathered information:**
+
+**Validation Questions:**
+- Based on our discussion, does this summary capture your vision accurately?
+- Are there any critical aspects we haven't covered?
+- What would you change or add to this understanding?
+- Do the priorities and constraints seem realistic?
+
+**Synthesis Process:**
+- AI presents back a structured summary of all gathered information
+- User confirms, corrects, or expands on any points
+- AI identifies any gaps or inconsistencies that need clarification
+- Final validation before moving to documentation phase
+
+---
+
+## 5 · Final Documentation Generation
+
+**Only after complete discovery, AI generates comprehensive documentation:**
+
+### Core Documentation Suite
+Create comprehensive documentation in `docs/` folder:
+
+#### PRD.md (Product Requirements Document)
+```markdown
+# Project Name - PRD
+
+## Problem Statement
+[Clear problem definition]
+
+## Goals & Success Metrics
+[Measurable outcomes]
+
+## User Personas & Use Cases
+[Target users and their needs]
+
+## Functional Requirements
+[What the system must do]
+
+## Non-Functional Requirements
+[Performance, security, scalability]
+
+## Constraints & Assumptions
+[Limitations and dependencies]
+
+## Out of Scope
+[What we're explicitly not doing]
+```
+
+#### TECH_STACK.md
+```markdown
+# Technology Stack Decisions
+
+## Architecture Overview
+[High-level system design]
+
+## Technology Choices
+### Frontend: [Choice] - [Rationale]
+### Backend: [Choice] - [Rationale]
+### Database: [Choice] - [Rationale]
+### Infrastructure: [Choice] - [Rationale]
+
+## Architecture Decision Records
+### ADR-001: [Decision Title]
+- Status: Accepted/Deprecated
+- Context: [Why this decision was needed]
+- Decision: [What was decided]
+- Consequences: [Trade-offs and implications]
+```
+
+#### TASKS.md
+```markdown
+# Project Tasks
+
+## Phase 1: Foundation
+- [ ] 1.1.1: Set up development environment
+- [ ] 1.1.2: Initialize project structure
+- [ ] 1.1.3: Configure CI/CD pipeline
+
+## Phase 2: Core Features
+[Detailed task breakdown]
+
+## Phase 3: Integration & Testing
+[Testing and integration tasks]
+
+## Phase 4: Deployment & Launch
+[Deployment and launch tasks]
+```
+
+---
+
+## 6 · Validation & Iteration
+
+- **Prototype development** — Build minimal viable prototypes to test key assumptions.
+- **Stakeholder review cycles** — Regular check-ins with stakeholders for feedback.
+- **Technical spike execution** — Investigate high-risk technical areas.
+- **Documentation updates** — Keep all docs synchronized with new learnings.
+- **Go/no-go decision points** — Define criteria for proceeding to development phase.
+
+---
+
+## 7 · Design Thinking Principles
+
+### Human-Centered Design
+- **Empathy mapping** — Understand user needs, pains, and motivations.
+- **Journey mapping** — Map user interactions and touchpoints.
+- **Accessibility considerations** — Design for diverse user abilities and contexts.
+
+### Iterative Approach
+- **Rapid prototyping** — Quick, low-fidelity tests of key concepts.
+- **Fail fast principle** — Identify and address issues early when changes are cheap.
+- **Feedback loops** — Regular validation with users and stakeholders.
+
+### Systems Thinking
+- **Holistic view** — Consider the entire ecosystem, not just the immediate solution.
+- **Unintended consequences** — Anticipate how changes might affect other systems.
+- **Scalability planning** — Design for future growth and evolution.
+
+---
+
+## 8 · Quality Gates & Deliverables
+
+### Phase Completion Criteria
+- [ ] Problem is clearly defined and validated
+- [ ] Requirements are documented and prioritized
+- [ ] Technology stack decisions are made and documented
+- [ ] Project tasks are broken down and estimated
+- [ ] Risks are identified with mitigation plans
+- [ ] Success metrics are defined and measurable
+- [ ] Stakeholder sign-off on scope and approach
+
+### Documentation Quality Checklist
+- [ ] All documents follow consistent format and style
+- [ ] Cross-references between documents are accurate
+- [ ] Decisions include rationale and alternatives considered
+- [ ] Requirements are testable and measurable
+- [ ] Assumptions are clearly stated and validated
+- [ ] Documents are stored in proper `docs/` structure
+
+---
+
+## 9 · Transition to Development
+
+- **Handoff preparation** — Ensure all documentation is complete and accessible.
+- **Development environment setup** — Prepare tools, repositories, and CI/CD pipelines.
+- **Team alignment** — Brief development team on decisions and rationale.
+- **First sprint planning** — Select initial tasks and establish development rhythm.
+- **Communication channels** — Set up project communication and status reporting.
+
+> **Next Phase:** Move to active development following task management and development standards.

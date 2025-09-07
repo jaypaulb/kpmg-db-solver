@@ -1,0 +1,268 @@
+# 3.2 Background Agent Workflow (Autonomous Operation)
+
+## Core Principles
+- **Autonomous Operation**: Work independently without user intervention
+- **Self-Healing**: Handle blockers by moving to next available task
+- **Zero Feedback**: Proceed without check-ins unless blocked
+- **Multi-Agent Safety**: Prevent conflicts and duplicate work
+
+## Task Selection Protocol
+
+### Step 1: Find Next Available Task
+```bash
+# Read TASKS.md and find first unchecked task
+# Look for pattern: - [ ] **Task X.X.X**: description
+# Skip tasks marked as: - [🔄], - [✅], - [🚫]
+```
+
+### Step 2: Check Task Availability (CRITICAL)
+```bash
+# Check for existing issues
+glab issue list --search "Task X.X.X" --state all
+
+# Check for existing branches
+git branch --list "feature/*Task X.X.X*"
+git branch -r --list "origin/feature/*Task X.X.X*"
+```
+
+### Step 3: Reserve Task in Main (ATOMIC)
+```bash
+# Always start from main
+git checkout main
+git pull origin main
+
+# Update TASKS.md to reserve task
+# Change: - [ ] **Task X.X.X**: description
+# To:     - [🔄] **Task X.X.X**: description - Status: In Progress (Reserving...)
+
+# Atomic commit and push
+git add TASKS.md
+git commit -m "docs(tasks): reserve Task X.X.X for development"
+git push origin main
+```
+
+### Step 4: Create Issue and Branch
+```bash
+# Create issue (check if exists first)
+glab issue create --title "Task X.X.X: description" --description "requirements"
+
+# Create feature branch (includes updated TASKS.md from main)
+git checkout -b feature/{issue-number}-description
+
+# Update TASKS.md with issue number
+# Change: - [🔄] **Task X.X.X**: description - Status: In Progress (Reserving...)
+# To:     - [🔄] **Task X.X.X**: description - Status: In Progress (Issue #X)
+```
+
+## Conflict Resolution
+
+### If Task Already in Progress
+- **Move to next available task immediately**
+- **Do not attempt to take over existing work**
+- **Log the conflict in issue comments if appropriate**
+
+### If Reservation Fails
+- **Check if someone else reserved it first**
+- **If yes, move to next available task**
+- **If no, retry once, then move to next task**
+
+### If Issue Creation Fails
+- **Check if issue already exists**
+- **If exists, use existing issue number**
+- **If not, create new issue with different title**
+
+## Implementation Protocol
+
+### Quality Checks (Run Individually)
+```bash
+# Run each check individually to identify specific issues
+ruff check .
+black --check .
+mypy .
+pytest
+```
+
+### Commit Standards
+- Use conventional commits: `{type}({scope}): {description}`
+- Commit frequently with meaningful messages
+- Include issue numbers in commits when relevant
+
+### Documentation Requirements
+- Add docstrings to all public functions/classes
+- Update TASKS.md with progress milestones
+- Comment on issues for major progress updates
+
+## Blocker Protocol
+
+### When Blocked
+1. **Document blocker thoroughly in issue**
+2. **Mark issue as blocked**: `glab issue edit {number} --label "blocked"`
+3. **Update TASKS.md**: `- [🚫] Task X.X.X: description - Status: Blocked (Issue #X)`
+4. **Move to next available task immediately**
+5. **Do not wait for blocker resolution**
+
+### Blocker Documentation
+```bash
+glab issue comment {number} --message "
+BLOCKER: [Brief description]
+
+Details:
+- What was being attempted
+- Error message or issue encountered
+- Attempted solutions
+- What help is needed
+
+Moving to next available task.
+"
+```
+
+## Completion Protocol
+
+### Final Quality Check
+```bash
+# Run all quality checks individually
+ruff check .
+black --check .
+mypy .
+pytest
+```
+
+### Issue Update
+```bash
+glab issue comment {number} --message "
+Task completed successfully!
+
+- ✅ [List of completed items]
+- ✅ All quality checks pass
+- ✅ Tests pass
+
+Ready for review.
+"
+```
+
+### TASKS.md Update
+```markdown
+- [✅] **Task X.X.X**: description - Status: Completed (Issue #X)
+```
+
+### MR Creation and Completion
+```bash
+# Create MR
+glab mr create --title "feat: description (Issue #X)" --description "implements Task X.X.X"
+
+# Self-merge if no issues found
+glab mr merge {number} --squash --remove-source-branch --yes
+
+# Close issue
+glab issue close {number} --message "Task completed and merged"
+
+# Switch back to main
+git checkout main
+git pull origin main
+```
+
+## Safety Protocols
+
+### Task Claiming Safety
+- **Atomic Updates**: Task reservation must be single commit
+- **Immediate Push**: Push reservation to main immediately
+- **Conflict Detection**: Check for conflicts before claiming
+- **Graceful Degradation**: Move to next task if claim fails
+
+### Branch Management Safety
+- **Unique Naming**: Use issue number + description
+- **Cleanup**: Delete branches after merge
+- **Status Tracking**: Keep branch status in sync with TASKS.md
+
+### Communication Safety
+- **Issue Comments**: Use for progress updates
+- **Status Updates**: Update TASKS.md with milestones
+- **Blocker Reporting**: Report blockers immediately
+
+## Success Metrics
+
+### Task Throughput
+- Complete tasks without user intervention
+- Maintain consistent progress through task list
+- Handle multiple tasks per session
+
+### Conflict Avoidance
+- Successfully claim tasks without conflicts
+- Detect existing work before attempting
+- Move gracefully to next task when blocked
+
+### Blocker Recovery
+- Move to next task when blocked
+- Document blockers thoroughly
+- Continue working autonomously
+
+### Quality Maintenance
+- Pass all quality checks autonomously
+- Maintain code quality standards
+- Follow documentation requirements
+
+## Error Handling
+
+### Git Errors
+- **Push fails**: Check for conflicts, resolve or move to next task
+- **Branch creation fails**: Check if branch exists, use existing or create new
+- **Merge conflicts**: Document in issue, move to next task
+
+### API Errors
+- **Issue creation fails**: Check if exists, use existing or retry
+- **MR creation fails**: Check permissions, document in issue
+- **Quality check fails**: Fix issues, retry, or move to next task
+
+### System Errors
+- **Network issues**: Retry once, then move to next task
+- **Permission issues**: Document in issue, move to next task
+- **Resource issues**: Document in issue, move to next task
+
+## Autonomous Operation Checklist
+
+Before starting any task:
+- [ ] Task is available (not in progress)
+- [ ] No existing issues for this task
+- [ ] No existing branches for this task
+- [ ] Main branch is up to date
+
+During implementation:
+- [ ] Quality checks pass individually
+- [ ] Tests pass
+- [ ] Documentation updated
+- [ ] TASKS.md updated with progress
+
+Before completion:
+- [ ] All quality checks pass
+- [ ] All tests pass
+- [ ] Issue updated with completion
+- [ ] TASKS.md marked as completed
+- [ ] MR created and merged
+- [ ] Issue closed
+- [ ] Back on main branch
+
+## Emergency Procedures
+
+### If Agent Gets Stuck
+1. Document the situation in current issue
+2. Mark issue as blocked
+3. Move to next available task
+4. Continue autonomous operation
+
+### If Multiple Agents Conflict
+1. Check TASKS.md for current status
+2. Move to next available task
+3. Document conflict in issue comments
+4. Continue autonomous operation
+
+### If Quality Checks Continuously Fail
+1. Document specific failures in issue
+2. Mark issue as blocked
+3. Move to next available task
+4. Continue autonomous operation
+
+Remember: The goal is autonomous task completion with zero user intervention while maintaining quality and preventing conflicts.
+description:
+globs:
+alwaysApply: false
+---

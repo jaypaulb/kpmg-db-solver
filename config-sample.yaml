@@ -1,0 +1,30 @@
+# KPMG DB Solver - Sample Configuration
+# Copy this file to config.yaml and update with your actual values
+
+# Canvus Server Configuration
+canvus_server:
+  url: "https://localhost:443"  # Always localhost for local file access
+  username: "your_username_here"
+  password: "your_password_here"
+  timeout: 30  # seconds
+  insecure_tls: true  # Set to false for production with valid certificates
+
+# File System Paths
+paths:
+  assets_folder: "C:\\ProgramData\\MultiTaction\\canvus\\assets"  # Default Canvus installation path
+  backup_root_folder: "C:\\ProgramData\\MultiTaction\\canvus\\backups"  # Default Canvus backup path
+  output_folder: "./output"
+
+# Logging Configuration
+logging:
+  level: "info"        # debug, info, warn, error
+  verbose: true        # Enable verbose mode to see detailed API responses
+  log_to_file: true    # Enable logging to file
+  log_file: "kpmg-db-solver.log"
+
+# Performance Settings
+performance:
+  max_concurrent_api: 10      # Number of concurrent API calls
+  max_concurrent_files: 20    # Number of concurrent file operations
+  api_request_timeout: 30     # seconds
+  file_operation_timeout: 60  # seconds

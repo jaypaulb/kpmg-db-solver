@@ -1,0 +1,22 @@
+canvus_server:
+  url: "https://localhost:443"  # Always localhost for local file access
+  username: "admin"
+  password: "password123"
+  timeout: 30
+
+paths:
+  assets_folder: "/tmp/assets"
+  backup_root_folder: "/tmp/backups"
+  output_folder: "./output"
+
+logging:
+  level: "info"
+  verbose: false
+  log_to_file: false
+  log_file: "kpmg-db-solver.log"
+
+performance:
+  max_concurrent_api: 10
+  max_concurrent_files: 20
+  api_request_timeout: 30
+  file_operation_timeout: 60

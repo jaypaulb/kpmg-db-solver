@@ -171,7 +171,7 @@ func extractAssetFromWidget(ctx context.Context, session *canvussdk.Session, can
 	hash := ""
 	filename := ""
 	name := ""
-	
+
 	if widgetValue := reflect.ValueOf(widgetDetails); widgetValue.IsValid() && !widgetValue.IsNil() {
 		// Get hash field - if it exists and is not empty, this is a media asset
 		if hashField := widgetValue.Elem().FieldByName("Hash"); hashField.IsValid() && hashField.CanInterface() {
@@ -179,14 +179,14 @@ func extractAssetFromWidget(ctx context.Context, session *canvussdk.Session, can
 				hash = hashStr
 			}
 		}
-		
+
 		// Get filename field
 		if filenameField := widgetValue.Elem().FieldByName("OriginalFilename"); filenameField.IsValid() && filenameField.CanInterface() {
 			if filenameStr, ok := filenameField.Interface().(string); ok {
 				filename = filenameStr
 			}
 		}
-		
+
 		// Get name field (could be Title, Name, etc.)
 		if nameField := widgetValue.Elem().FieldByName("Title"); nameField.IsValid() && nameField.CanInterface() {
 			if nameStr, ok := nameField.Interface().(string); ok {

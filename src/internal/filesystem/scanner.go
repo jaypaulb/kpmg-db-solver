@@ -86,7 +86,7 @@ func extractHashFromFilename(filename string) string {
 	}
 
 	hash := strings.TrimSuffix(filename, ext)
-	
+
 	// Basic validation: hash should be alphanumeric and reasonable length
 	if len(hash) < 8 || len(hash) > 64 {
 		return ""
@@ -130,10 +130,10 @@ func ParallelScanAssetsFolder(assetsPath string, numWorkers int) (*ScanResult, e
 
 	// Channel to collect file paths
 	filePaths := make(chan string, 1000)
-	
+
 	// Channel to collect results
 	results := make(chan FileInfo, 1000)
-	
+
 	// Channel to signal completion
 	done := make(chan bool)
 

@@ -136,12 +136,7 @@ func extractMediaAssets(ctx context.Context, session *canvussdk.Session, canvas 
 
 	// Process each widget and extract media assets
 	for _, widget := range widgets {
-		// Only process media widget types
-		if !isMediaWidget(widget.WidgetType) {
-			continue
-		}
-
-		// Get the specific widget details based on type
+		// Get the specific widget details to check for hash field
 		asset := extractAssetFromWidget(ctx, session, canvas, widget)
 		if asset != nil {
 			assets = append(assets, *asset)
@@ -151,87 +146,67 @@ func extractMediaAssets(ctx context.Context, session *canvussdk.Session, canvas 
 	return assets
 }
 
-// extractAssetFromWidget extracts asset information from a specific widget
+// extractAssetFromWidget extracts asset information from a widget if it has a hash field
 func extractAssetFromWidget(ctx context.Context, session *canvussdk.Session, canvas canvussdk.Canvas, widget canvussdk.Widget) *AssetInfo {
+	// Get the specific widget details based on type
+	var widgetDetails interface{}
+	var err error
+
 	switch widget.WidgetType {
 	case "Image":
-		return extractImageAsset(ctx, session, canvas, widget)
+		widgetDetails, err = session.GetImage(ctx, fmt.Sprintf("%d", canvas.ID), widget.ID)
 	case "Pdf":
-		return extractPDFAsset(ctx, session, canvas, widget)
+		widgetDetails, err = session.GetPDF(ctx, fmt.Sprintf("%d", canvas.ID), widget.ID)
 	case "Video":
-		return extractVideoAsset(ctx, session, canvas, widget)
+		widgetDetails, err = session.GetVideo(ctx, fmt.Sprintf("%d", canvas.ID), widget.ID)
 	default:
-		return nil
+		return nil // Not a media widget type
 	}
-}
 
-// extractImageAsset extracts asset information from an Image widget
-func extractImageAsset(ctx context.Context, session *canvussdk.Session, canvas canvussdk.Canvas, widget canvussdk.Widget) *AssetInfo {
-	// Get the specific image details
-	image, err := session.GetImage(ctx, fmt.Sprintf("%d", canvas.ID), widget.ID)
 	if err != nil {
 		return nil
 	}
 
-	if image.Hash == "" {
-		return nil
-	}
-
-	return &AssetInfo{
-		Hash:             image.Hash,
-		WidgetType:       "Image",
-		OriginalFilename: image.OriginalFilename,
-		CanvasID:         fmt.Sprintf("%d", canvas.ID),
-		CanvasName:       canvas.Name,
-		WidgetID:         image.ID,
-		WidgetName:       image.Title,
-	}
-}
-
-// extractPDFAsset extracts asset information from a PDF widget
-func extractPDFAsset(ctx context.Context, session *canvussdk.Session, canvas canvussdk.Canvas, widget canvussdk.Widget) *AssetInfo {
-	// Get the specific PDF details
-	pdf, err := session.GetPDF(ctx, fmt.Sprintf("%d", canvas.ID), widget.ID)
-	if err != nil {
-		return nil
-	}
-
-	// Since PDF struct might be incomplete, we'll use a generic approach
-	// We'll need to check if the PDF has a hash field
-	// For now, let's assume it follows the same pattern as Image
-	// We can use reflection or type assertion to get the hash if it exists
-	
-	// Try to get hash from the PDF struct - this might need adjustment based on actual struct
+	// Extract hash and other fields using reflection
 	hash := ""
 	filename := ""
 	name := ""
 	
-	// Use reflection to get hash field if it exists
-	if pdfValue := reflect.ValueOf(pdf); pdfValue.IsValid() && !pdfValue.IsNil() {
-		if hashField := pdfValue.Elem().FieldByName("Hash"); hashField.IsValid() && hashField.CanInterface() {
+	if widgetValue := reflect.ValueOf(widgetDetails); widgetValue.IsValid() && !widgetValue.IsNil() {
+		// Get hash field - if it exists and is not empty, this is a media asset
+		if hashField := widgetValue.Elem().FieldByName("Hash"); hashField.IsValid() && hashField.CanInterface() {
 			if hashStr, ok := hashField.Interface().(string); ok && hashStr != "" {
 				hash = hashStr
 			}
 		}
-		if filenameField := pdfValue.Elem().FieldByName("OriginalFilename"); filenameField.IsValid() && filenameField.CanInterface() {
+		
+		// Get filename field
+		if filenameField := widgetValue.Elem().FieldByName("OriginalFilename"); filenameField.IsValid() && filenameField.CanInterface() {
 			if filenameStr, ok := filenameField.Interface().(string); ok {
 				filename = filenameStr
 			}
 		}
-		if nameField := pdfValue.Elem().FieldByName("Name"); nameField.IsValid() && nameField.CanInterface() {
+		
+		// Get name field (could be Title, Name, etc.)
+		if nameField := widgetValue.Elem().FieldByName("Title"); nameField.IsValid() && nameField.CanInterface() {
+			if nameStr, ok := nameField.Interface().(string); ok {
+				name = nameStr
+			}
+		} else if nameField := widgetValue.Elem().FieldByName("Name"); nameField.IsValid() && nameField.CanInterface() {
 			if nameStr, ok := nameField.Interface().(string); ok {
 				name = nameStr
 			}
 		}
 	}
 
+	// Only return asset if it has a hash (media assets only)
 	if hash == "" {
 		return nil
 	}
 
 	return &AssetInfo{
 		Hash:             hash,
-		WidgetType:       "Pdf",
+		WidgetType:       widget.WidgetType,
 		OriginalFilename: filename,
 		CanvasID:         fmt.Sprintf("%d", canvas.ID),
 		CanvasName:       canvas.Name,
@@ -240,67 +215,6 @@ func extractPDFAsset(ctx context.Context, session *canvussdk.Session, canvas can
 	}
 }
 
-// extractVideoAsset extracts asset information from a Video widget
-func extractVideoAsset(ctx context.Context, session *canvussdk.Session, canvas canvussdk.Canvas, widget canvussdk.Widget) *AssetInfo {
-	// Get the specific video details
-	video, err := session.GetVideo(ctx, fmt.Sprintf("%d", canvas.ID), widget.ID)
-	if err != nil {
-		return nil
-	}
-
-	// Since Video struct might be incomplete, we'll use a generic approach
-	// We'll need to check if the Video has a hash field
-	// For now, let's assume it follows the same pattern as Image
-	// We can use reflection or type assertion to get the hash if it exists
-	
-	// Try to get hash from the Video struct - this might need adjustment based on actual struct
-	hash := ""
-	filename := ""
-	name := ""
-	
-	// Use reflection to get hash field if it exists
-	if videoValue := reflect.ValueOf(video); videoValue.IsValid() && !videoValue.IsNil() {
-		if hashField := videoValue.Elem().FieldByName("Hash"); hashField.IsValid() && hashField.CanInterface() {
-			if hashStr, ok := hashField.Interface().(string); ok && hashStr != "" {
-				hash = hashStr
-			}
-		}
-		if filenameField := videoValue.Elem().FieldByName("OriginalFilename"); filenameField.IsValid() && filenameField.CanInterface() {
-			if filenameStr, ok := filenameField.Interface().(string); ok {
-				filename = filenameStr
-			}
-		}
-		if nameField := videoValue.Elem().FieldByName("Name"); nameField.IsValid() && nameField.CanInterface() {
-			if nameStr, ok := nameField.Interface().(string); ok {
-				name = nameStr
-			}
-		}
-	}
-
-	if hash == "" {
-		return nil
-	}
-
-	return &AssetInfo{
-		Hash:             hash,
-		WidgetType:       "Video",
-		OriginalFilename: filename,
-		CanvasID:         fmt.Sprintf("%d", canvas.ID),
-		CanvasName:       canvas.Name,
-		WidgetID:         widget.ID,
-		WidgetName:       name,
-	}
-}
-
-// isMediaWidget checks if a widget type is a media asset
-func isMediaWidget(widgetType string) bool {
-	switch widgetType {
-	case "Pdf", "Image", "Video":
-		return true
-	default:
-		return false
-	}
-}
 
 // GetUniqueAssets returns unique assets (deduplicated by hash)
 func (result *DiscoveryResult) GetUniqueAssets() []AssetInfo {

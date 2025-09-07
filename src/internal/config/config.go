@@ -247,10 +247,13 @@ func (c *Config) SaveConfig(filename string) error {
 	return viper.WriteConfigAs(filename)
 }
 
-// GetCanvusAPIURL returns the base URL for the Canvus server
-// The SDK methods already include the /api/v1 prefix in their endpoints
+// GetCanvusAPIURL returns the full API URL
 func (c *Config) GetCanvusAPIURL() string {
-	return strings.TrimSuffix(c.CanvusServer.URL, "/")
+	url := strings.TrimSuffix(c.CanvusServer.URL, "/")
+	if !strings.HasSuffix(url, "/api/v1") {
+		url += "/api/v1"
+	}
+	return url
 }
 
 // Helper functions

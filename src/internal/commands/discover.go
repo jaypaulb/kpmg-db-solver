@@ -36,15 +36,19 @@ func (cmd *DiscoverCommand) Execute() error {
 
 	// Create Canvus session using existing SDK
 	ctx := context.Background()
+	apiURL := cmd.config.GetCanvusAPIURL()
+	logger.Verbose("Using API URL: %s", apiURL)
+	
 	var session *canvussdk.Session
 	if cmd.config.CanvusServer.InsecureTLS {
-		session = canvussdk.NewSession(cmd.config.GetCanvusAPIURL(), canvussdk.WithInsecureTLS())
+		session = canvussdk.NewSession(apiURL, canvussdk.WithInsecureTLS())
 	} else {
-		session = canvussdk.NewSession(cmd.config.GetCanvusAPIURL())
+		session = canvussdk.NewSession(apiURL)
 	}
 
 	// Authenticate using existing SDK
 	logger.Info("🔐 Authenticating with Canvus Server...")
+	logger.Verbose("Login credentials - Username: %s, Password: [HIDDEN]", cmd.config.CanvusServer.Username)
 	err := session.Login(ctx, cmd.config.CanvusServer.Username, cmd.config.CanvusServer.Password)
 	if err != nil {
 		logger.Error("Authentication failed: %v", err)

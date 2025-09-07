@@ -131,15 +131,15 @@ func extractMediaAssets(ctx context.Context, session *canvussdk.Session, canvas 
 	logger := logging.GetLogger()
 
 	// Get all widgets for this canvas
-	logger.Verbose("Getting widgets for canvas '%s' (ID: %d)", canvas.Name, canvas.ID)
-	widgets, err := session.ListWidgets(ctx, fmt.Sprintf("%d", canvas.ID), nil)
+	logger.Verbose("Getting widgets for canvas '%s' (ID: %s)", canvas.Name, canvas.ID)
+	widgets, err := session.ListWidgets(ctx, canvas.ID, nil)
 	if err != nil {
-		logger.Error("Failed to get widgets for canvas '%s' (ID: %d): %v", canvas.Name, canvas.ID, err)
+		logger.Error("Failed to get widgets for canvas '%s' (ID: %s): %v", canvas.Name, canvas.ID, err)
 		return assets // Return empty slice if we can't get widgets
 	}
 
-	logger.Verbose("Found %d widgets in canvas '%s' (ID: %d)", len(widgets), canvas.Name, canvas.ID)
-	
+	logger.Verbose("Found %d widgets in canvas '%s' (ID: %s)", len(widgets), canvas.Name, canvas.ID)
+
 	// Log the raw widget response in verbose mode
 	if len(widgets) > 0 {
 		logger.Verbose("Widget response for canvas '%s':", canvas.Name)
@@ -160,14 +160,14 @@ func extractMediaAssets(ctx context.Context, session *canvussdk.Session, canvas 
 		}
 	}
 
-	logger.Verbose("Extracted %d media assets from canvas '%s' (ID: %d)", mediaCount, canvas.Name, canvas.ID)
+	logger.Verbose("Extracted %d media assets from canvas '%s' (ID: %s)", mediaCount, canvas.Name, canvas.ID)
 	return assets
 }
 
 // extractAssetFromWidget extracts asset information from a widget if it has a hash field
 func extractAssetFromWidget(ctx context.Context, session *canvussdk.Session, canvas canvussdk.Canvas, widget canvussdk.Widget) *AssetInfo {
 	logger := logging.GetLogger()
-	
+
 	// Get the specific widget details based on type
 	var widgetDetails interface{}
 	var err error
@@ -176,11 +176,11 @@ func extractAssetFromWidget(ctx context.Context, session *canvussdk.Session, can
 
 	switch widget.WidgetType {
 	case "Image":
-		widgetDetails, err = session.GetImage(ctx, fmt.Sprintf("%d", canvas.ID), widget.ID)
+		widgetDetails, err = session.GetImage(ctx, canvas.ID, widget.ID)
 	case "Pdf":
-		widgetDetails, err = session.GetPDF(ctx, fmt.Sprintf("%d", canvas.ID), widget.ID)
+		widgetDetails, err = session.GetPDF(ctx, canvas.ID, widget.ID)
 	case "Video":
-		widgetDetails, err = session.GetVideo(ctx, fmt.Sprintf("%d", canvas.ID), widget.ID)
+		widgetDetails, err = session.GetVideo(ctx, canvas.ID, widget.ID)
 	default:
 		logger.Verbose("Skipping non-media widget type: %s", widget.WidgetType)
 		return nil // Not a media widget type
@@ -237,7 +237,7 @@ func extractAssetFromWidget(ctx context.Context, session *canvussdk.Session, can
 		Hash:             hash,
 		WidgetType:       widget.WidgetType,
 		OriginalFilename: filename,
-		CanvasID:         fmt.Sprintf("%d", canvas.ID),
+		CanvasID:         canvas.ID,
 		CanvasName:       canvas.Name,
 		WidgetID:         widget.ID,
 		WidgetName:       name,

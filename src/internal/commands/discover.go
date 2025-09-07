@@ -29,7 +29,7 @@ func NewDiscoverCommand(cfg *config.Config) *DiscoverCommand {
 // Execute runs the discover command
 func (cmd *DiscoverCommand) Execute() error {
 	logger := logging.GetLogger()
-	
+
 	logger.Info("🔍 Starting asset discovery...")
 	logger.Info("📡 Connecting to Canvus Server: %s", cmd.config.CanvusServer.URL)
 	logger.Info("📁 Scanning assets folder: %s", cmd.config.Paths.AssetsFolder)
@@ -51,7 +51,7 @@ func (cmd *DiscoverCommand) Execute() error {
 		return fmt.Errorf("authentication failed: %w", err)
 	}
 	defer session.Logout(ctx)
-	
+
 	logger.Info("✅ Successfully authenticated with Canvus Server")
 
 	// Discover assets from API

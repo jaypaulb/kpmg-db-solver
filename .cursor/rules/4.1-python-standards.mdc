@@ -1,0 +1,72 @@
+---
+description: Python development standards and best practices
+globs: *.py,*.pyi,requirements*.txt,pyproject.toml,setup.py
+---
+# 4.1 Python Development Standards
+
+## Quality Gates
+- All code must pass: `ruff check .`, `black --check .`, `mypy .`, `pytest`
+- Test coverage >80% (use `pytest --cov`)
+- Docstrings for all public functions/classes
+- Use Google or NumPy docstring format consistently
+
+## Code Style & Structure
+- Follow PEP 8 standards (enforced by black and ruff)
+- Use type hints for all function parameters and return values
+- Use async/await for I/O operations
+- Use conventional commits: `{type}({scope}): {description}`
+
+## Project Structure
+```
+project/
+├── src/package_name/
+│   ├── __init__.py
+│   ├── main.py
+│   └── modules/
+├── tests/
+│   ├── __init__.py
+│   ├── test_main.py
+│   └── conftest.py
+├── requirements.txt
+├── pyproject.toml
+└── README.md
+```
+
+## Documentation Standards
+- All public functions must have docstrings with examples
+- Include parameter types, return types, and raised exceptions
+- Use type hints as primary documentation
+- Update API documentation for endpoint changes
+
+## Security Best Practices
+- Never commit secrets, API keys, or credentials
+- Use environment variables for configuration (`os.getenv()`)
+- Validate all inputs and sanitize outputs
+- No sensitive data in logs or error messages
+- Use `secrets` module for cryptographic operations
+
+## Testing Framework
+- Use pytest for all tests
+- Write unit tests for all new functions
+- Include integration tests for API endpoints
+- Use pytest fixtures for test data and setup
+- Mock external dependencies with `unittest.mock` or `pytest-mock`
+
+## Error Handling
+- Implement comprehensive error handling with try/except blocks
+- Use custom exception classes for domain-specific errors
+- Log errors appropriately (exclude sensitive data)
+- Return meaningful error messages to users
+- Use logging module instead of print statements
+
+## Dependency Management
+- Pin dependency versions in requirements.txt
+- Use virtual environments for isolation
+- Keep dependencies minimal and well-justified
+- Regular security updates with `pip audit`
+
+## Performance Considerations
+- Use appropriate data structures (sets for membership, deques for queues)
+- Profile code with `cProfile` for bottlenecks
+- Use generators for memory efficiency with large datasets
+- Consider async/await for I/O bound operations

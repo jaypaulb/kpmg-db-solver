@@ -1,0 +1,109 @@
+---
+description: High-level project management standards and workflows
+globs: PRD.md,README.md,CHANGELOG.md
+---
+# 2.1 Project Management Standards
+
+## Documentation Requirements
+
+### Essential Files
+- **PRD.md**: Product Requirements Document with goals and success criteria
+- **TASKS.md**: Single source of truth for all project tasks
+- **README.md**: Project setup, usage, and contribution guidelines
+- **CHANGELOG.md**: Version history and notable changes
+
+### Documentation Standards
+- Keep documentation in sync with implementation
+- Update relevant docs when making architectural changes
+- Use clear, actionable language
+- Include examples and code snippets where helpful
+
+## Workflow Principles
+
+### Development Lifecycle
+1. **Planning**: Define requirements in PRD.md
+2. **Task Breakdown**: Create detailed tasks in TASKS.md
+3. **Implementation**: Work through tasks systematically
+4. **Testing**: Validate implementation against requirements
+5. **Documentation**: Update docs to reflect changes
+6. **Review**: Ensure quality standards are met
+
+### Quality Gates
+- All tasks must have clear acceptance criteria
+- Code must pass quality checks before merge
+- Documentation must be updated for user-facing changes
+- Tests must cover new functionality
+
+## Issue Management
+
+### Issue Lifecycle
+1. **Creation**: Every task must have corresponding issue
+2. **Assignment**: Link issues to tasks in TASKS.md
+3. **Progress**: Update issue status as work progresses
+4. **Resolution**: Close issues when tasks are completed
+5. **Verification**: Confirm resolution meets requirements
+
+### Issue Standards
+- Use descriptive titles that clearly state the problem/feature
+- Include acceptance criteria in issue description
+- Reference related tasks and documentation
+- Use labels for categorization (bug, feature, enhancement)
+- Link to relevant code, PRs, or external resources
+
+## Branch Management
+
+### Naming Conventions
+- `feature/{issue-number}-{brief-description}`
+- `bugfix/{issue-number}-{brief-description}`
+- `hotfix/{issue-number}-{brief-description}`
+- Always include issue number for traceability
+
+### Merge Strategy
+- Use squash merges to keep history clean
+- Include issue reference in merge commit message
+- Delete feature branches after successful merge
+- Protect main branch with required reviews
+
+## Communication Standards
+
+### Status Updates
+- Update task status immediately when starting/completing work
+- Use consistent status indicators across all tracking systems
+- Provide context for blockers or delays
+- Document decisions and rationale in appropriate places
+
+### Progress Tracking
+- ✅ Completed successfully
+- ⚠️ Completed with issues that were resolved
+- 🚧 Blocked, awaiting input or resources
+- 🔄 In progress
+
+## Release Management
+
+### Version Control
+- Use semantic versioning (MAJOR.MINOR.PATCH)
+- Tag releases in git with version numbers
+- Update CHANGELOG.md with each release
+- Include migration notes for breaking changes
+
+### Release Checklist
+- [ ] All planned tasks completed
+- [ ] Quality gates passed
+- [ ] Documentation updated
+- [ ] Tests passing
+- [ ] Security review completed (if applicable)
+- [ ] Performance benchmarks met (if applicable)
+
+## Risk Management
+
+### Common Risks
+- Scope creep: Stick to defined requirements in PRD.md
+- Technical debt: Address during development, not after
+- Dependency issues: Keep dependencies up to date
+- Communication gaps: Regular status updates and documentation
+
+### Mitigation Strategies
+- Regular review of progress against original requirements
+- Proactive identification and resolution of blockers
+- Clear escalation paths for technical decisions
+- Automated quality checks to catch issues early

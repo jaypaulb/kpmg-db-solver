@@ -1,0 +1,190 @@
+---
+description: Standardized project folder structure and organization standards
+globs: README.md,docs/**,src/**
+alwaysApply: false
+---
+# 1.3 Project Structure Standards
+
+## Root Directory Principles
+
+### Clean Root Policy
+- Keep root directory minimal and focused
+- Only essential top-level files and primary folders
+- All documentation moves to `docs/` folder
+- README.md is the only documentation file in root
+
+### Standard Root Structure
+```
+project-name/
+├── README.md                 # Project overview and quick start
+├── docs/                     # All documentation
+├── src/                      # Source code
+├── tests/                    # Test files
+├── scripts/                  # Build/deployment scripts
+├── .cursor/                  # Cursor rules and config
+├── .github/ or .gitlab/      # CI/CD and issue templates
+└── [language-specific files] # package.json, requirements.txt, etc.
+```
+
+## Documentation Organization
+
+### docs/ Folder Structure
+```
+docs/
+├── PRD.md                    # Product Requirements Document
+├── TASKS.md                  # Task management and tracking
+├── TECH_STACK.md            # Technology decisions and architecture
+├── NOTES.md                 # Development notes and decisions
+├── CHANGELOG.md             # Version history and changes
+├── API.md                   # API documentation (if applicable)
+├── DEPLOYMENT.md            # Deployment and infrastructure docs
+├── CONTRIBUTING.md          # Contribution guidelines
+├── assets/                  # Images, diagrams, mockups
+│   ├── diagrams/
+│   ├── mockups/
+│   └── screenshots/
+└── archive/                 # Deprecated or historical docs
+```
+
+### Documentation Standards
+- Use consistent naming: UPPERCASE.md for major docs
+- Include creation and last-updated dates
+- Cross-reference related documents
+- Keep docs synchronized with implementation
+
+## Source Code Organization
+
+### Language-Agnostic Structure
+```
+src/
+├── main/                    # Main application code
+│   ├── core/               # Core business logic
+│   ├── api/                # API endpoints/controllers
+│   ├── services/           # Business services
+│   ├── models/             # Data models
+│   ├── utils/              # Utility functions
+│   └── config/             # Configuration files
+├── shared/                  # Shared/common code
+└── [language-specific]/     # Language conventions
+```
+
+### Language-Specific Adaptations
+
+#### Python Projects
+```
+src/
+├── package_name/
+│   ├── __init__.py
+│   ├── main.py
+│   ├── core/
+│   ├── api/
+│   └── utils/
+└── requirements.txt (root level)
+```
+
+#### Go Projects
+```
+src/
+├── cmd/                     # Main applications
+├── internal/                # Private application code
+├── pkg/                     # Public library code
+└── api/                     # API definitions
+```
+
+#### MERN/Node.js Projects
+```
+src/
+├── client/                  # React frontend
+├── server/                  # Express backend
+├── shared/                  # Shared utilities
+└── package.json (root level)
+```
+
+## Testing Structure
+
+### Test Organization
+```
+tests/
+├── unit/                    # Unit tests
+├── integration/             # Integration tests
+├── e2e/                     # End-to-end tests
+├── fixtures/                # Test data and fixtures
+└── utils/                   # Test utilities
+```
+
+### Test File Conventions
+- Mirror source structure in test directories
+- Use consistent naming: `test_filename.py`, `filename.test.js`
+- Group related tests in directories
+- Include test data in `fixtures/` folder
+
+## Configuration Management
+
+### Environment Configuration
+```
+config/ (or root level)
+├── development.env
+├── staging.env
+├── production.env
+├── .env.example             # Template with all variables
+└── config.yaml              # Application configuration
+```
+
+### Configuration Principles
+- Never commit secrets or credentials
+- Use `.env.example` to document required variables
+- Separate config by environment
+- Use consistent variable naming conventions
+
+## Scripts and Automation
+
+### scripts/ Folder
+```
+scripts/
+├── setup.sh                 # Initial project setup
+├── build.sh                 # Build automation
+├── deploy.sh                # Deployment scripts
+├── test.sh                  # Test runner scripts
+├── lint.sh                  # Code quality checks
+└── utils/                   # Utility scripts
+```
+
+### Script Standards
+- Make scripts executable (`chmod +x`)
+- Include usage documentation in script headers
+- Use consistent exit codes (0 = success, non-zero = error)
+- Support both development and CI environments
+
+## Project Initialization Checklist
+
+### New Project Setup
+- [ ] Create standard folder structure
+- [ ] Initialize README.md with project overview
+- [ ] Create docs/PRD.md with requirements
+- [ ] Create docs/TASKS.md for task tracking
+- [ ] Set up .gitignore for language/framework
+- [ ] Configure .cursor/rules/ with appropriate rule set
+- [ ] Create .env.example with required variables
+- [ ] Set up basic CI/CD configuration
+
+### Documentation Migration
+When adopting this structure in existing projects:
+- [ ] Move all docs from root to docs/ folder
+- [ ] Update internal links between documentation files
+- [ ] Update README.md to reference docs/ folder
+- [ ] Archive old documentation in docs/archive/
+- [ ] Update CI/CD paths if needed
+
+## Benefits of This Structure
+
+### Developer Experience
+- Predictable file locations across all projects
+- Clear separation of concerns
+- Easy navigation and onboarding
+- Consistent tooling and automation
+
+### Project Maintenance
+- Scalable organization as project grows
+- Clear documentation hierarchy
+- Simplified CI/CD configuration
+- Better collaboration through standardization

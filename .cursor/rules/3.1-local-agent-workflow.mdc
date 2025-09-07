@@ -1,0 +1,190 @@
+---
+alwaysApply: true
+---
+
+# 3.1 Local Agent Workflow (Human + AI Collaboration)
+
+## Core Rules
+- [TASKS.md](mdc:TASKS.md) is the single source of truth for all project tasks
+- Every task must have a GitLab issue before work begins
+- Use conventional commits: `{type}({scope}): {description}`
+- All code must pass: ruff, black, mypy, pytest (run individually)
+- **CRITICAL: Task reservation happens in main branch first**
+
+## Background Agent Support
+- **Autonomous Operation**: Agents can work independently without user intervention
+- **Task Selection**: Agents automatically select the next available task from TASKS.md
+- **Self-Healing**: Agents handle blockers by moving to next available task
+- **Zero Feedback**: Agents proceed without check-ins unless blocked
+
+## Task Reservation Protocol (MULTI-AGENT SAFE)
+### Step 1: Check Task Availability
+```bash
+# Check if task is already in progress
+glab issue list --search "Task X.X.X"
+git branch --list "feature/*Task X.X.X*"
+```
+
+### Step 2: Reserve Task in Main (CRITICAL)
+```bash
+# Always start from main
+git checkout main
+git pull origin main
+
+# Update TASKS.md to mark task as in progress
+# Change: - [ ] Task X.X.X: description
+# To:     - [🔄] Task X.X.X: description - Status: In Progress (Reserving...)
+
+# Commit task reservation to main
+git add TASKS.md
+git commit -m "docs(tasks): reserve Task X.X.X for development"
+git push origin main
+```
+
+### Step 3: Create Issue and Branch
+```bash
+# Create issue (check if exists first)
+glab issue create --title "Task X.X.X: description" --description "requirements"
+
+# Create feature branch (includes updated TASKS.md from main)
+git checkout -b feature/{issue-number}-description
+
+# Update TASKS.md with issue number
+# Change: - [🔄] Task X.X.X: description - Status: In Progress (Reserving...)
+# To:     - [🔄] Task X.X.X: description - Status: In Progress (Issue #X)
+```
+
+## Existence Checks (PREVENT DUPLICATE WORK)
+### Issue Existence Check
+```bash
+# Check for existing issues before creating new ones
+glab issue list --search "Task X.X.X" --state all
+glab issue list --search "description keywords" --state all
+```
+
+### Branch Existence Check
+```bash
+# Check for existing branches before creating new ones
+git branch --list "feature/*Task X.X.X*"
+git branch --list "feature/*{issue-number}*"
+git branch -r --list "origin/feature/*Task X.X.X*"
+```
+
+### Conflict Resolution
+- **If task already in progress**: Move to next available task immediately
+- **If issue exists but no branch**: Check issue status, create branch if appropriate
+- **If branch exists but no issue**: Create issue, then continue with existing branch
+- **If both exist**: Move to next available task
+
+## Task Status Indicators
+- `- [ ]` = Not started
+- `- [🔄]` = In Progress (add Status: In Progress (Issue #X))
+- `- [✅]` = Completed (add Status: Completed (Issue #X))
+- `- [🚫]` = Blocked (add Status: Blocked (Issue #X))
+- `- [⏳]` = Reserved (temporary state during reservation)
+
+## Quality Requirements
+- Test coverage >80%
+- Docstrings for all public functions/classes
+- No secrets in code
+- Comprehensive error handling
+- Use environment variables for configuration
+- **IMPORTANT: Run quality checks individually to identify specific issues**
+- **Update workflow documentation immediately** when gaps or missing steps are discovered
+- **Test assertion robustness** — Ensure test assertions handle edge cases including zero values and empty states
+
+## Blocker Protocol
+- Document blocker thoroughly in issue comments
+- Mark issue blocked: `glab issue edit {number} --label "blocked"`
+- Update TASKS.md as blocked
+- Move to next available task immediately
+- **Background agents**: Continue autonomously to next task
+
+## Completion Workflow
+- **CRITICAL: Run quality checks individually before MR**:
+  - `ruff check .`
+  - `black --check .`
+  - `mypy .`
+  - `pytest`
+- **CRITICAL: Self-merge MR if no issues found**: `glab mr merge {number} --squash --remove-source-branch --yes`
+- **CRITICAL: Close issue after merge**: `glab issue close {number}`
+- **CRITICAL: Switch back to main**: `git checkout main && git pull origin main`
+- Verify completion: Check MR status and issue closure
+- Update TASKS.md as completed if not already done
+
+## Multi-Agent Safety Protocols
+### Task Claiming
+- **Atomic Updates**: Task reservation must be atomic (single commit)
+- **Immediate Push**: Push task reservation to main immediately
+- **Conflict Detection**: Check for conflicts before claiming
+- **Graceful Degradation**: Move to next task if claim fails
+
+### Branch Management
+- **Unique Naming**: Use issue number + description for unique branch names
+- **Cleanup**: Delete branches after merge
+- **Status Tracking**: Keep branch status in sync with TASKS.md
+
+### Communication
+- **Issue Comments**: Use issue comments for progress updates
+- **Status Updates**: Update TASKS.md with progress milestones
+- **Blocker Reporting**: Report blockers immediately in issues
+
+## Commands Reference
+```bash
+# Task availability checks
+glab issue list --search "Task X.X.X" --state all
+git branch --list "feature/*Task X.X.X*"
+
+# Task reservation (in main)
+git checkout main && git pull origin main
+# Edit TASKS.md to mark as in progress
+git add TASKS.md && git commit -m "docs(tasks): reserve Task X.X.X"
+git push origin main
+
+# Issue management
+glab issue create --title "Task X.X.X: description" --description "requirements"
+glab issue list --state open
+glab issue edit {number} --label "blocked"
+
+# Branch management
+git checkout -b feature/{issue-number}-description
+git checkout main && git pull origin main
+
+# Quality checks (run individually)
+ruff check .
+black --check .
+mypy .
+pytest
+
+# MR creation and completion
+glab mr create --title "feat: description (Issue #X)" --description "implements Task X.X.X"
+glab mr merge {number} --squash --remove-source-branch --yes
+```
+
+## Success Criteria
+Before MR submission:
+- [ ] Code passes quality checks
+- [ ] Tests pass
+- [ ] Documentation updated
+- [ ] TASKS.md updated
+- [ ] Issue referenced
+- [ ] Conventional commits used
+- [ ] No secrets in code
+- [ ] Error handling implemented
+
+After MR completion:
+- [ ] **CRITICAL: MR self-merged (if no issues)**
+- [ ] **CRITICAL: Issue closed**
+- [ ] **CRITICAL: Switched back to main branch**
+- [ ] **CRITICAL: Latest changes pulled**
+- [ ] **CRITICAL: Verify completion** — Check MR status and issue closure
+
+## Background Agent Success Metrics
+- **Task Throughput**: Complete tasks without user intervention
+- **Conflict Avoidance**: Successfully claim tasks without conflicts
+- **Blocker Recovery**: Move to next task when blocked
+- **Quality Maintenance**: Pass all quality checks autonomously
+
+
+- [ ] **CRITICAL: Verify completion** — Check MR status and issue closure
+

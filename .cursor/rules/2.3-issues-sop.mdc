@@ -1,0 +1,232 @@
+---
+description: Issue tracking and GitLab/GitHub integration workflows
+globs: .gitlab-ci.yml,.github/**
+---
+# 2.3 Issue Tracking Standards
+
+## Issue Creation Requirements
+
+### Before Creating Issues
+```bash
+# Always check for existing issues first
+glab issue list --search "Task X.X.X" --state all
+glab issue list --search "key terms" --state all
+
+# For GitHub projects
+gh issue list --search "Task X.X.X" --state all
+gh issue list --search "key terms" --state all
+```
+
+### Issue Template
+```markdown
+# Task X.X.X: Brief Description
+
+## Requirements
+- [ ] Specific requirement 1
+- [ ] Specific requirement 2
+- [ ] Specific requirement 3
+
+## Acceptance Criteria
+- Given: Initial state
+- When: Action taken
+- Then: Expected result
+
+## Dependencies
+- Depends on: Issue #Y (Task A.B.C)
+- Blocks: Task D.E.F (will create issue after completion)
+
+## Implementation Notes
+- Technical considerations
+- Potential challenges
+- Resource requirements
+
+## Definition of Done
+- [ ] Code implemented and tested
+- [ ] Documentation updated
+- [ ] Quality gates passed
+- [ ] Peer review completed
+```
+
+## Issue Management Lifecycle
+
+### Issue States
+- **Open**: Ready for work or in progress
+- **In Progress**: Actively being worked on
+- **Blocked**: Cannot proceed due to external dependency
+- **Review**: Implementation complete, awaiting review
+- **Closed**: Work completed and verified
+
+### Issue Labels
+Use consistent labeling across projects:
+- `type:feature` - New functionality
+- `type:bug` - Bug fixes
+- `type:enhancement` - Improvements to existing features
+- `type:documentation` - Documentation updates
+- `priority:high` - Critical issues
+- `priority:medium` - Important but not critical
+- `priority:low` - Nice to have
+- `status:blocked` - Cannot proceed
+- `status:review` - Ready for review
+
+## GitLab Integration
+
+### Issue Creation
+```bash
+# Create issue with full template
+glab issue create \
+  --title "Task X.X.X: Brief Description" \
+  --description "$(cat issue_template.md)" \
+  --label "type:feature,priority:medium"
+
+# Quick issue creation
+glab issue create \
+  --title "Task X.X.X: Brief Description" \
+  --description "Implements requirements from TASKS.md"
+```
+
+### Issue Updates
+```bash
+# Update issue status
+glab issue edit <issue-number> --label "+status:blocked"
+glab issue edit <issue-number> --label "-status:blocked,+status:review"
+
+# Add comments for progress updates
+glab issue comment <issue-number> --message "Progress update: Authentication middleware completed"
+
+# Close issue
+glab issue close <issue-number>
+```
+
+## GitHub Integration
+
+### Issue Creation
+```bash
+# Create issue with template
+gh issue create \
+  --title "Task X.X.X: Brief Description" \
+  --body "$(cat issue_template.md)" \
+  --label "feature,medium-priority"
+
+# Quick issue creation
+gh issue create \
+  --title "Task X.X.X: Brief Description" \
+  --body "Implements requirements from TASKS.md"
+```
+
+### Issue Updates
+```bash
+# Update issue labels
+gh issue edit <issue-number> --add-label "blocked"
+gh issue edit <issue-number> --remove-label "blocked"
+
+# Add comments
+gh issue comment <issue-number> --body "Progress update: Authentication middleware completed"
+
+# Close issue
+gh issue close <issue-number>
+```
+
+## Issue-Task Synchronization
+
+### Linking Issues to Tasks
+Always maintain bidirectional links:
+- TASKS.md references issue number
+- Issue description references task identifier
+- Commit messages reference both task and issue
+
+```bash
+# Commit message format
+git commit -m "feat(auth): implement login endpoint (Task 1.2.3, Issue #42)"
+```
+
+### Status Synchronization
+Keep issue status in sync with task status:
+- Task reserved → Issue created
+- Task in progress → Issue labeled "in-progress"
+- Task blocked → Issue labeled "blocked" with comment explaining blocker
+- Task completed → Issue closed
+
+## Progress Communication
+
+### Regular Updates
+Provide progress updates in issue comments:
+- Daily progress for active issues
+- Immediate updates when blockers encountered
+- Status changes when moving between development phases
+
+### Update Template
+```markdown
+## Progress Update - 2024-01-15
+
+### Completed
+- [x] Database schema design
+- [x] User model implementation
+
+### In Progress
+- [ ] Authentication middleware (60% complete)
+
+### Next Steps
+- Implement password hashing
+- Add rate limiting
+
+### Blockers
+None currently
+
+### ETA
+Expected completion: 2024-01-16 EOD
+```
+
+## Issue Resolution
+
+### Before Closing Issues
+- [ ] All acceptance criteria met
+- [ ] Code reviewed and merged
+- [ ] Tests passing
+- [ ] Documentation updated
+- [ ] Task marked as completed in TASKS.md
+- [ ] No regressions introduced
+
+### Closure Documentation
+```markdown
+## Resolution Summary
+
+### Implementation Details
+- Added JWT-based authentication
+- Implemented rate limiting (5 attempts per minute)
+- Added password complexity validation
+
+### Testing
+- Unit tests: 15 tests, all passing
+- Integration tests: 8 tests, all passing
+- Manual testing: Login/logout flows verified
+
+### Documentation Updates
+- Updated API documentation
+- Added authentication guide to README
+
+### Related Issues
+- Closes #42
+- Related to #38 (user management)
+```
+
+## Blocker Management
+
+### Documenting Blockers
+When marking issues as blocked:
+- Clearly describe the blocker
+- Identify who/what can resolve it
+- Set expected resolution timeline
+- Add specific next actions
+
+### Blocker Template
+```markdown
+## Blocker Details
+
+**Type**: External dependency
+**Description**: Waiting for API key from payment provider
+**Impact**: Cannot implement payment processing
+**Owner**: External vendor (Stripe)
+**Action Required**: Contact vendor support
+**Expected Resolution**: 2-3 business days
+**Workaround**: Mock payment service for development
+```

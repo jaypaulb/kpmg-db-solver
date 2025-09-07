@@ -1,0 +1,162 @@
+---
+description: Development environment detection and OS-specific best practices
+globs:
+alwaysApply: false
+---
+# 1.2 Development Environment Standards
+
+## OS Detection Protocol
+
+### Check Environment First
+Always determine the operating system before executing commands:
+
+```bash
+# Check OS type
+uname -s  # Linux/Darwin/MINGW64_NT (Git Bash on Windows)
+echo $OS  # Windows_NT on Windows
+```
+
+### Environment Variables
+- **Windows**: `$env:OS` = "Windows_NT"
+- **Linux/Ubuntu**: `uname -s` = "Linux"
+- **Git Bash on Windows**: `uname -s` = "MINGW64_NT-*"
+
+## Windows PowerShell Best Practices
+
+### Core Commands
+- Use `Get-ChildItem` instead of `ls`
+- Use `Remove-Item` instead of `rm`
+- Use `Copy-Item` instead of `cp`
+- Use `Move-Item` instead of `mv`
+- Use `New-Item` for creating files/directories
+
+### Path Handling
+- Use backslashes `\` for Windows paths
+- Use `Join-Path` for path construction
+- Use `Test-Path` to check file existence
+- Use `Resolve-Path` for absolute paths
+
+### Command Execution
+```powershell
+# Command chaining - use semicolon
+command1; command2
+
+# Conditional execution
+if (Test-Path "file.txt") { Get-Content "file.txt" }
+
+# Error handling
+try {
+    # risky operation
+} catch {
+    Write-Error "Error: $($_.Exception.Message)"
+}
+```
+
+### Package Management
+- Use `choco install` for software (if Chocolatey installed)
+- Use `winget install` for Windows Package Manager
+- Use `Install-Package` for NuGet packages
+
+## Ubuntu/Linux Best Practices
+
+### Core Commands
+- Standard Unix commands: `ls`, `rm`, `cp`, `mv`, `mkdir`
+- Use `apt` for package management: `sudo apt install package`
+- Use `snap install` for snap packages
+- Use `which command` to find executable locations
+
+### Path Handling
+- Use forward slashes `/` for paths
+- Use `realpath` for absolute paths
+- Use `basename` and `dirname` for path components
+- Use `find` for file searches
+
+### Command Execution
+```bash
+# Command chaining
+command1 && command2  # Run if previous succeeds
+command1 || command2  # Run if previous fails
+command1; command2    # Run regardless
+
+# Conditional execution
+if [ -f "file.txt" ]; then
+    cat file.txt
+fi
+
+# Error handling
+set -e  # Exit on error
+set -o pipefail  # Pipe failure detection
+```
+
+### Environment Management
+- Use `export VAR=value` for environment variables
+- Use `source ~/.bashrc` to reload environment
+- Use virtual environments for language-specific tools
+
+## Common Development Tools
+
+### Git Operations (Cross-Platform)
+```bash
+git status
+git add .
+git commit -m "message"
+git push origin main
+```
+
+### Node.js/npm (Cross-Platform)
+```bash
+npm install
+npm run build
+npm test
+npx command
+```
+
+### Python (Cross-Platform)
+```bash
+# Virtual environment creation
+python -m venv venv
+
+# Activation (OS-specific)
+# Windows PowerShell: .\venv\Scripts\Activate.ps1
+# Windows CMD: venv\Scripts\activate.bat
+# Linux/Mac: source venv/bin/activate
+
+pip install -r requirements.txt
+python -m pytest
+```
+
+### Docker (Cross-Platform)
+```bash
+docker build -t image-name .
+docker run -p 8080:8080 image-name
+docker-compose up -d
+```
+
+## Anti-Patterns to Avoid
+
+### Don't Mix OS Commands
+- ❌ Using `ls` on Windows PowerShell
+- ❌ Using `Get-ChildItem` on Linux
+- ❌ Mixing path separators (`/` vs `\`)
+
+### Don't Assume Environment
+- ❌ Running commands without OS detection
+- ❌ Hardcoding paths without checking OS
+- ❌ Using OS-specific flags on wrong platform
+
+## Environment Setup Validation
+
+### Check Required Tools
+```bash
+# Check if tools are available
+git --version
+node --version
+python --version
+docker --version
+```
+
+### Validate Environment
+- Confirm package managers are available
+- Check write permissions in working directory
+- Verify network connectivity for package downloads
+- Test basic command execution

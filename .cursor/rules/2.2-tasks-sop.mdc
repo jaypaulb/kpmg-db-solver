@@ -1,0 +1,141 @@
+---
+description: TASKS.md file management and task lifecycle procedures
+globs: TASKS.md
+---
+# 2.2 TASKS.md Management Standards
+
+## Task Status Indicators
+- `- [ ]` = Not started
+- `- [🔄]` = In Progress (add Status: In Progress (Issue #X))
+- `- [✅]` = Completed (add Status: Completed (Issue #X))
+- `- [🚫]` = Blocked (add Status: Blocked (Issue #X))
+- `- [⏳]` = Reserved (temporary state during reservation)
+
+## Task Structure Requirements
+Each task must include:
+- Clear, actionable description
+- Unique identifier (e.g., Task 1.2.3)
+- Acceptance criteria
+- Issue reference when work begins
+- Estimated and actual time (when available)
+
+```markdown
+- [ ] 1.2.3: Implement user authentication system
+  - Acceptance: Users can login/logout with email/password
+  - Dependencies: Database schema completed (Task 1.1.1)
+  - Estimate: 4 hours
+```
+
+## Task Reservation Protocol (Multi-Agent Safe)
+
+### Step 1: Check Availability
+```bash
+# Verify task is not already claimed
+git log --oneline -n 20 | grep "Task X.X.X"
+git branch --list "feature/*Task*X.X.X*"
+```
+
+### Step 2: Reserve in Main Branch
+```bash
+# Always start from main
+git checkout main && git pull origin main
+
+# Update TASKS.md status to reserved
+# Change: - [ ] Task X.X.X: description
+# To:     - [⏳] Task X.X.X: description - Status: Reserved
+
+# Commit reservation immediately
+git add TASKS.md
+git commit -m "docs(tasks): reserve Task X.X.X for development"
+git push origin main
+```
+
+### Step 3: Create Issue and Update Status
+```bash
+# Create issue with task details
+# Update TASKS.md with issue number
+# Change: - [⏳] Task X.X.X: description - Status: Reserved
+# To:     - [🔄] Task X.X.X: description - Status: In Progress (Issue #Y)
+```
+
+## Task Updates During Development
+
+### Progress Tracking
+- Update status immediately when starting work
+- Add issue references as soon as issues are created
+- Document blockers with specific details
+- Include actual time spent when completing
+
+### Status Change Examples
+```markdown
+# Starting work
+- [🔄] 1.2.3: Implement user authentication - Status: In Progress (Issue #42)
+
+# Encountering blocker
+- [🚫] 1.2.3: Implement user authentication - Status: Blocked (Issue #42)
+  - Blocker: Waiting for API key from external service
+  - Next action: Contact vendor support
+
+# Completing task
+- [✅] 1.2.3: Implement user authentication - Status: Completed (Issue #42)
+  - Actual time: 6 hours (2 hours over estimate due to API integration complexity)
+```
+
+## Task Dependencies
+
+### Dependency Tracking
+- Clearly mark dependencies between tasks
+- Do not start dependent tasks until prerequisites are completed
+- Update dependent tasks when blockers are resolved
+
+```markdown
+- [✅] 1.1.1: Design database schema - Status: Completed (Issue #40)
+- [ ] 1.2.1: Implement user model - Dependencies: Task 1.1.1
+- [ ] 1.2.3: Implement authentication - Dependencies: Task 1.2.1
+```
+
+## Multi-Agent Coordination
+
+### Conflict Prevention
+- Always check task availability before claiming
+- Use atomic commits for task reservation
+- Push reservations immediately to prevent conflicts
+- Include timestamps in commit messages for debugging
+
+### Conflict Resolution
+- If task already in progress: Move to next available task
+- If reservation conflicts occur: First successful push wins
+- If branch exists but no reservation: Check with team before proceeding
+- Document all conflicts and resolutions
+
+## Task Completion Verification
+
+### Before Marking Complete
+- [ ] All acceptance criteria met
+- [ ] Quality gates passed (tests, linting, etc.)
+- [ ] Documentation updated if required
+- [ ] Issue closed or ready to close
+- [ ] No known blockers or technical debt introduced
+
+### Completion Documentation
+```markdown
+- [✅] 1.2.3: Implement user authentication - Status: Completed (Issue #42)
+  - Completed: 2024-01-15 14:30 UTC
+  - Actual time: 6 hours
+  - Quality checks: ✅ Tests pass, ✅ Linting clean, ✅ Code review approved
+  - Notes: Added rate limiting for login attempts
+```
+
+## Task Maintenance
+
+### Regular Reviews
+- Review task status accuracy weekly
+- Update estimates based on completed work
+- Identify and address recurring blockers
+- Archive completed tasks periodically
+
+### Task Refinement
+- Break down large tasks (>8 hours) into smaller ones
+- Add clarification to ambiguous tasks
+- Update acceptance criteria as requirements evolve
+- Maintain clear task hierarchy and numbering

@@ -1,0 +1,258 @@
+---
+description: C++ development standards and best practices
+globs: *.cpp,*.hpp,*.h,*.cc,CMakeLists.txt,Makefile,*.cmake
+---
+# 4.4 C++ Development Standards
+
+## Quality Gates
+- All code must pass: `clang-format`, `clang-tidy`, `cppcheck`, unit tests
+- Test coverage >80% (use `gcov` or `llvm-cov`)
+- Documentation for all public APIs
+- Use modern C++ standards (C++17 or later preferred)
+
+## Code Style & Structure
+- Follow Google C++ Style Guide or similar established standard
+- Use `clang-format` for consistent formatting
+- Use meaningful names for variables, functions, and classes
+- Prefer RAII (Resource Acquisition Is Initialization)
+- Use conventional commits: `{type}({scope}): {description}`
+
+## Project Structure
+```
+project/
+├── src/                     # Source files
+│   ├── main.cpp
+│   ├── core/               # Core functionality
+│   ├── utils/              # Utility functions
+│   └── include/            # Public headers
+├── include/                # Public API headers
+│   └── project_name/
+├── tests/                  # Test files
+│   ├── unit/
+│   ├── integration/
+│   └── fixtures/
+├── third_party/            # External dependencies
+├── build/                  # Build artifacts (gitignored)
+├── CMakeLists.txt          # CMake build configuration
+├── conanfile.txt           # Conan dependencies (if using)
+└── README.md
+```
+
+## Build System Standards
+- Use CMake as primary build system
+- Support out-of-source builds
+- Provide clear build instructions
+- Use package managers (Conan, vcpkg) for dependencies
+- Support multiple compilers (GCC, Clang, MSVC)
+
+```cmake
+# CMakeLists.txt example
+cmake_minimum_required(VERSION 3.15)
+project(ProjectName VERSION 1.0.0)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# Enable testing
+enable_testing()
+
+# Add subdirectories
+add_subdirectory(src)
+add_subdirectory(tests)
+```
+
+## Memory Management
+- Prefer smart pointers over raw pointers
+- Use `std::unique_ptr` for exclusive ownership
+- Use `std::shared_ptr` for shared ownership (sparingly)
+- Use `std::weak_ptr` to break circular references
+- Follow RAII principles for resource management
+
+```cpp
+// Good: RAII with smart pointers
+class ResourceManager {
+private:
+    std::unique_ptr<Resource> resource_;
+public:
+    ResourceManager() : resource_(std::make_unique<Resource>()) {}
+    // Destructor automatically cleans up
+};
+
+// Avoid: Raw pointer management
+class BadResourceManager {
+private:
+    Resource* resource_;
+public:
+    BadResourceManager() : resource_(new Resource()) {}
+    ~BadResourceManager() { delete resource_; } // Easy to forget!
+};
+```
+
+## Error Handling
+- Use exceptions for exceptional circumstances
+- Use error codes or `std::optional` for expected failures
+- Provide strong exception safety guarantees when possible
+- Document exception specifications in function documentation
+- Use RAII to ensure cleanup in exception scenarios
+
+```cpp
+// Good: Using std::optional for expected failures
+std::optional<int> divide(int a, int b) {
+    if (b == 0) {
+        return std::nullopt;
+    }
+    return a / b;
+}
+
+// Good: Exception for unexpected errors
+class FileProcessor {
+public:
+    void process(const std::string& filename) {
+        std::ifstream file(filename);
+        if (!file.is_open()) {
+            throw std::runtime_error("Cannot open file: " + filename);
+        }
+        // Process file...
+    }
+};
+```
+
+## Modern C++ Features
+- Use `auto` for type deduction when it improves readability
+- Use range-based for loops when appropriate
+- Use lambda expressions for short, local functions
+- Use `constexpr` for compile-time constants and functions
+- Use `nullptr` instead of `NULL` or `0`
+
+```cpp
+// Modern C++ examples
+class ModernExample {
+public:
+    // Range-based for loop
+    void processVector(const std::vector<int>& vec) {
+        for (const auto& item : vec) {
+            // Process item
+        }
+    }
+
+    // Lambda expression
+    void sortData(std::vector<Data>& data) {
+        std::sort(data.begin(), data.end(),
+                  [](const Data& a, const Data& b) {
+                      return a.priority > b.priority;
+                  });
+    }
+
+    // constexpr for compile-time computation
+    static constexpr size_t BUFFER_SIZE = 1024;
+};
+```
+
+## Testing Framework
+- Use Google Test (gtest) or Catch2 for unit testing
+- Write tests for all public interfaces
+- Use test fixtures for complex setup
+- Mock external dependencies using Google Mock or similar
+- Include performance benchmarks for critical code paths
+
+```cpp
+// Google Test example
+#include <gtest/gtest.h>
+
+class MathUtilsTest : public ::testing::Test {
+protected:
+    void SetUp() override {
+        // Setup code
+    }
+
+    void TearDown() override {
+        // Cleanup code
+    }
+};
+
+TEST_F(MathUtilsTest, DivisionByZeroReturnsNullopt) {
+    auto result = MathUtils::divide(10, 0);
+    EXPECT_FALSE(result.has_value());
+}
+
+TEST_F(MathUtilsTest, ValidDivisionReturnsCorrectResult) {
+    auto result = MathUtils::divide(10, 2);
+    ASSERT_TRUE(result.has_value());
+    EXPECT_EQ(result.value(), 5);
+}
+```
+
+## Documentation Standards
+- Use Doxygen-style comments for public APIs
+- Include parameter descriptions and return values
+- Provide usage examples for complex functions
+- Document thread safety and exception behavior
+- Keep documentation synchronized with implementation
+
+```cpp
+/**
+ * @brief Calculates the factorial of a non-negative integer
+ *
+ * This function computes n! = n * (n-1) * ... * 1 for n >= 0.
+ * For n = 0, returns 1 by definition.
+ *
+ * @param n The non-negative integer to compute factorial for
+ * @return The factorial of n
+ * @throws std::invalid_argument if n < 0
+ *
+ * @example
+ * ```cpp
+ * int result = factorial(5);  // Returns 120
+ * ```
+ */
+int factorial(int n);
+```
+
+## Performance Considerations
+- Profile code with tools like `perf`, `gprof`, or `Valgrind`
+- Use appropriate data structures (prefer `std::vector` over `std::list` for most cases)
+- Consider cache locality in data structure design
+- Use move semantics to avoid unnecessary copies
+- Prefer algorithms from `<algorithm>` over hand-written loops
+
+```cpp
+// Move semantics example
+class LargeObject {
+private:
+    std::vector<int> data_;
+
+public:
+    // Move constructor
+    LargeObject(LargeObject&& other) noexcept
+        : data_(std::move(other.data_)) {}
+
+    // Move assignment operator
+    LargeObject& operator=(LargeObject&& other) noexcept {
+        if (this != &other) {
+            data_ = std::move(other.data_);
+        }
+        return *this;
+    }
+};
+```
+
+## Dependency Management
+- Use package managers (Conan, vcpkg) for third-party libraries
+- Pin dependency versions for reproducible builds
+- Keep dependencies minimal and well-justified
+- Document all external dependencies and their purposes
+- Regular security updates and vulnerability scanning
+
+## Compiler and Platform Support
+- Support major compilers: GCC 9+, Clang 10+, MSVC 2019+
+- Use compiler-specific optimizations judiciously
+- Write portable code that works across platforms
+- Use conditional compilation sparingly and document reasons
+- Test on target platforms regularly
+
+## Security Best Practices
+- Validate all inputs and check bounds
+- Use secure coding practices (avoid buffer overflows)
+- Never trust external data without validation
+- Use static analysis tools to catch security issues
+- Follow CERT C++ Coding Standards for security-critical code

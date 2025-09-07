@@ -109,10 +109,14 @@ func DiscoverAllAssets(session *canvussdk.Session, requestsPerSecond int) (*Disc
 			rateLimiter.Wait() // Rate limit
 
 			// Extract media assets from widgets
-			assets := extractMediaAssets(ctx, session, canvas)
+			widgetAssets := extractMediaAssets(ctx, session, canvas)
+			
+			// Extract media assets from canvas background
+			backgroundAssets := extractBackgroundAssets(ctx, session, canvas)
 
 			mu.Lock()
-			result.Assets = append(result.Assets, assets...)
+			result.Assets = append(result.Assets, widgetAssets...)
+			result.Assets = append(result.Assets, backgroundAssets...)
 			mu.Unlock()
 		}(canvas)
 	}
@@ -161,6 +165,42 @@ func extractMediaAssets(ctx context.Context, session *canvussdk.Session, canvas 
 	}
 
 	logger.Verbose("Extracted %d media assets from canvas '%s' (ID: %s)", mediaCount, canvas.Name, canvas.ID)
+	return assets
+}
+
+// extractBackgroundAssets extracts media assets from canvas background images
+func extractBackgroundAssets(ctx context.Context, session *canvussdk.Session, canvas canvussdk.Canvas) []AssetInfo {
+	var assets []AssetInfo
+	logger := logging.GetLogger()
+
+	// Get canvas background
+	logger.Verbose("Getting background for canvas '%s' (ID: %s)", canvas.Name, canvas.ID)
+	background, err := session.GetCanvasBackground(ctx, canvas.ID)
+	if err != nil {
+		logger.Verbose("Failed to get background for canvas '%s' (ID: %s): %v", canvas.Name, canvas.ID, err)
+		return assets // Return empty slice if we can't get background
+	}
+
+	// Check if background has an image with a hash
+	if background.Image != nil && background.Image.Hash != "" {
+		logger.Verbose("Found background image with hash: %s for canvas '%s'", background.Image.Hash, canvas.Name)
+		
+		asset := AssetInfo{
+			Hash:             background.Image.Hash,
+			WidgetType:       "CanvasBackground",
+			OriginalFilename: "", // Background images don't have original filenames
+			CanvasID:         canvas.ID,
+			CanvasName:       canvas.Name,
+			WidgetID:         "background", // Special ID for background
+			WidgetName:       "Canvas Background",
+		}
+		
+		assets = append(assets, asset)
+		logger.Verbose("Found background asset: Canvas Background (CanvasBackground) - Hash: %s", background.Image.Hash)
+	} else {
+		logger.Verbose("No background image found for canvas '%s' (ID: %s)", canvas.Name, canvas.ID)
+	}
+
 	return assets
 }
 

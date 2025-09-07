@@ -116,7 +116,59 @@ func LoadConfig(configFile string) (*Config, error) {
 		return nil, fmt.Errorf("error unmarshaling config: %w", err)
 	}
 
+	// Preserve defaults for empty fields
+	config.preserveDefaults()
+
 	return config, nil
+}
+
+// preserveDefaults ensures that default values are preserved when config fields are empty
+func (c *Config) preserveDefaults() {
+	defaults := DefaultConfig()
+	
+	// Preserve default assets folder if empty
+	if c.Paths.AssetsFolder == "" {
+		c.Paths.AssetsFolder = defaults.Paths.AssetsFolder
+	}
+	
+	// Preserve default output folder if empty
+	if c.Paths.OutputFolder == "" {
+		c.Paths.OutputFolder = defaults.Paths.OutputFolder
+	}
+	
+	// Preserve default Canvus Server URL if empty
+	if c.CanvusServer.URL == "" {
+		c.CanvusServer.URL = defaults.CanvusServer.URL
+	}
+	
+	// Preserve default timeout if zero
+	if c.CanvusServer.Timeout == 0 {
+		c.CanvusServer.Timeout = defaults.CanvusServer.Timeout
+	}
+	
+	// Preserve default logging level if empty
+	if c.Logging.Level == "" {
+		c.Logging.Level = defaults.Logging.Level
+	}
+	
+	// Preserve default log file if empty
+	if c.Logging.LogFile == "" {
+		c.Logging.LogFile = defaults.Logging.LogFile
+	}
+	
+	// Preserve default performance settings if zero
+	if c.Performance.MaxConcurrentAPI == 0 {
+		c.Performance.MaxConcurrentAPI = defaults.Performance.MaxConcurrentAPI
+	}
+	if c.Performance.MaxConcurrentFiles == 0 {
+		c.Performance.MaxConcurrentFiles = defaults.Performance.MaxConcurrentFiles
+	}
+	if c.Performance.APIRequestTimeout == 0 {
+		c.Performance.APIRequestTimeout = defaults.Performance.APIRequestTimeout
+	}
+	if c.Performance.FileOperationTimeout == 0 {
+		c.Performance.FileOperationTimeout = defaults.Performance.FileOperationTimeout
+	}
 }
 
 // ValidateConfig validates the configuration

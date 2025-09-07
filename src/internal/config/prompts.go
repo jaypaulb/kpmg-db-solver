@@ -22,10 +22,10 @@ func NewInteractivePrompts() *InteractivePrompts {
 	p := &InteractivePrompts{
 		reader: bufio.NewReader(os.Stdin),
 	}
-	
+
 	// Set up signal handler to restore terminal state on interrupt
 	p.setupSignalHandler()
-	
+
 	return p
 }
 
@@ -33,7 +33,7 @@ func NewInteractivePrompts() *InteractivePrompts {
 func (p *InteractivePrompts) setupSignalHandler() {
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
-	
+
 	go func() {
 		<-c
 		// Restore terminal state

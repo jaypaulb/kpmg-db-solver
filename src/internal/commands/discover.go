@@ -52,7 +52,7 @@ func (cmd *DiscoverCommand) Execute() error {
 		return fmt.Errorf("asset discovery failed: %w", err)
 	}
 
-	fmt.Printf("📈 Found %d canvases with %d total media assets\n", 
+	fmt.Printf("📈 Found %d canvases with %d total media assets\n",
 		len(discoveryResult.Canvases), len(discoveryResult.Assets))
 
 	// Get unique assets
@@ -72,7 +72,7 @@ func (cmd *DiscoverCommand) Execute() error {
 		return fmt.Errorf("filesystem scan failed: %w", err)
 	}
 
-	fmt.Printf("📂 Found %d files in assets folder (%.2f MB total)\n", 
+	fmt.Printf("📂 Found %d files in assets folder (%.2f MB total)\n",
 		len(scanResult.Files), float64(scanResult.TotalSize)/(1024*1024))
 
 	// Find missing assets
@@ -130,7 +130,7 @@ func (cmd *DiscoverCommand) generateReports(discoveryResult *canvus.DiscoveryRes
 // generateDetailedReport generates a detailed text report
 func (cmd *DiscoverCommand) generateDetailedReport(missingAssets []canvus.AssetInfo) error {
 	reportPath := "missing_assets_report.txt"
-	
+
 	// Group assets by canvas
 	canvasMap := make(map[string][]canvus.AssetInfo)
 	for _, asset := range missingAssets {
@@ -167,10 +167,10 @@ func (cmd *DiscoverCommand) generateDetailedReport(missingAssets []canvus.AssetI
 // generateCSVReport generates a CSV report
 func (cmd *DiscoverCommand) generateCSVReport(missingAssets []canvus.AssetInfo) error {
 	reportPath := "missing_assets.csv"
-	
+
 	// Generate CSV content
 	content := "Hash,WidgetType,OriginalFilename,CanvasID,CanvasName,WidgetID,WidgetName\n"
-	
+
 	for _, asset := range missingAssets {
 		content += fmt.Sprintf("%s,%s,%s,%d,%s,%d,%s\n",
 			asset.Hash,
@@ -198,7 +198,7 @@ func (cmd *DiscoverCommand) printSummary(discoveryResult *canvus.DiscoveryResult
 	fmt.Println("\n" + strings.Repeat("=", 60))
 	fmt.Println("📊 DISCOVERY SUMMARY")
 	fmt.Println(strings.Repeat("=", 60))
-	
+
 	fmt.Printf("⏱️  Discovery Duration: %v\n", discoveryResult.Duration)
 	fmt.Printf("📈 Total Canvases: %d\n", len(discoveryResult.Canvases))
 	fmt.Printf("🎯 Total Media Assets: %d\n", len(discoveryResult.Assets))
@@ -206,14 +206,14 @@ func (cmd *DiscoverCommand) printSummary(discoveryResult *canvus.DiscoveryResult
 	fmt.Printf("💾 Files in Assets Folder: %d\n", len(scanResult.Files))
 	fmt.Printf("💽 Total Assets Size: %.2f MB\n", float64(scanResult.TotalSize)/(1024*1024))
 	fmt.Printf("❌ Missing Assets: %d\n", len(missingAssets))
-	
+
 	if len(discoveryResult.Errors) > 0 {
 		fmt.Printf("⚠️  Errors Encountered: %d\n", len(discoveryResult.Errors))
 		for _, err := range discoveryResult.Errors {
 			fmt.Printf("   - %s\n", err)
 		}
 	}
-	
+
 	fmt.Println(strings.Repeat("=", 60))
 }
 

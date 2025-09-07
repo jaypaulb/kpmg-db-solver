@@ -25,24 +25,24 @@ $config = @{}
 $currentSection = ""
 foreach ($line in $iniContent) {
     $line = $line.Trim()
-    
+
     # Skip empty lines and comments
     if ($line -eq "" -or $line.StartsWith(";")) {
         continue
     }
-    
+
     # Check for section headers
     if ($line.StartsWith("[") -and $line.EndsWith("]")) {
         $currentSection = $line.Substring(1, $line.Length - 2)
         continue
     }
-    
+
     # Parse key=value pairs
     if ($line.Contains("=")) {
         $parts = $line.Split("=", 2)
         $key = $parts[0].Trim()
         $value = $parts[1].Trim()
-        
+
         if ($currentSection -eq "sql") {
             $config[$key] = $value
         }
@@ -64,12 +64,41 @@ Write-Host "   Password: [HIDDEN]" -ForegroundColor White
 # Check if psql is available
 $psqlPath = Get-Command psql -ErrorAction SilentlyContinue
 if (-not $psqlPath) {
-    Write-Error "❌ psql command not found. Please ensure PostgreSQL client tools are installed and in PATH."
-    Write-Host "You can download PostgreSQL client tools from: https://www.postgresql.org/download/" -ForegroundColor Yellow
-    exit 1
+    # Try to find psql in common PostgreSQL installation locations
+    $commonPaths = @(
+        "C:\Program Files\PostgreSQL\*\bin\psql.exe",
+        "C:\Program Files (x86)\PostgreSQL\*\bin\psql.exe",
+        "C:\PostgreSQL\*\bin\psql.exe"
+    )
+    
+    $foundPath = $null
+    foreach ($path in $commonPaths) {
+        $matches = Get-ChildItem -Path $path -ErrorAction SilentlyContinue | Sort-Object Name -Descending
+        if ($matches) {
+            $foundPath = $matches[0].FullName
+            break
+        }
+    }
+    
+    if ($foundPath) {
+        Write-Host "✅ Found psql at: $foundPath" -ForegroundColor Green
+        $psqlPath = $foundPath
+    } else {
+        Write-Error "❌ psql command not found. Please ensure PostgreSQL client tools are installed."
+        Write-Host "Common installation locations checked:" -ForegroundColor Yellow
+        Write-Host "  - C:\Program Files\PostgreSQL\*\bin\psql.exe" -ForegroundColor Yellow
+        Write-Host "  - C:\Program Files (x86)\PostgreSQL\*\bin\psql.exe" -ForegroundColor Yellow
+        Write-Host "  - C:\PostgreSQL\*\bin\psql.exe" -ForegroundColor Yellow
+        Write-Host "You can download PostgreSQL client tools from: https://www.postgresql.org/download/" -ForegroundColor Yellow
+        exit 1
+    }
 }
 
-Write-Host "✅ Found psql at: $($psqlPath.Source)" -ForegroundColor Green
+if ($psqlPath -is [string]) {
+    Write-Host "✅ Found psql at: $psqlPath" -ForegroundColor Green
+} else {
+    Write-Host "✅ Found psql at: $($psqlPath.Source)" -ForegroundColor Green
+}
 
 # Set PGPASSWORD environment variable for password authentication
 $env:PGPASSWORD = $password
@@ -98,7 +127,7 @@ $schemaCommands = @"
 
 # Get list of tables first
 $tablesQuery = "SELECT tablename FROM pg_tables WHERE schemaname = 'public' ORDER BY tablename;"
-$tables = psql -h localhost -p $port -U $username -d $databaseName -t -c $tablesQuery
+$tables = & $psqlPath -h localhost -p $port -U $username -d $databaseName -t -c $tablesQuery
 
 if ($LASTEXITCODE -ne 0) {
     Write-Error "❌ Failed to connect to database. Please check your credentials and connection."
@@ -151,19 +180,19 @@ ORDER BY tc.table_name, kcu.column_name;
 Write-Host "📝 Extracting schema to: $OutputPath" -ForegroundColor Cyan
 
 # Execute schema extraction
-$schemaCommands | psql -h localhost -p $port -U $username -d $databaseName -o $OutputPath
+$schemaCommands | & $psqlPath -h localhost -p $port -U $username -d $databaseName -o $OutputPath
 
 if ($LASTEXITCODE -eq 0) {
     Write-Host "✅ Schema successfully extracted to: $OutputPath" -ForegroundColor Green
-    
+
     # Show file size and line count
     $fileInfo = Get-Item $OutputPath
     $lineCount = (Get-Content $OutputPath | Measure-Object -Line).Lines
-    
+
     Write-Host "📊 Export Statistics:" -ForegroundColor Cyan
     Write-Host "   File Size: $([math]::Round($fileInfo.Length / 1KB, 2)) KB" -ForegroundColor White
     Write-Host "   Lines: $lineCount" -ForegroundColor White
-    
+
     Write-Host "`n🎉 Schema extraction completed successfully!" -ForegroundColor Green
     Write-Host "You can now share the schema file: $OutputPath" -ForegroundColor Yellow
 } else {

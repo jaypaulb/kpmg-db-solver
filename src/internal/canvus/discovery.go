@@ -255,22 +255,22 @@ func validateAssetsOnServer(ctx context.Context, session *canvussdk.Session, ass
 	for hash, asset := range uniqueAssets {
 		logger.Verbose("Validating asset hash: %s (%s) for canvas: %s", hash, asset.WidgetType, asset.CanvasID)
 		logger.Verbose("   Hash length: %d characters", len(hash))
-		
+
 		// Try to get the asset from the server
 		// We need a canvas ID for the request, so we'll use the first canvas that has this asset
 		assetData, err := session.GetAssetByHash(ctx, asset.CanvasID, hash)
 		if err != nil {
 			// Asset doesn't exist on server or there's an error
 			result.MissingAssets++
-			logger.Verbose("❌ Asset validation failed: %s (%s) - Hash: %s", 
+			logger.Verbose("❌ Asset validation failed: %s (%s) - Hash: %s",
 				asset.WidgetName, asset.WidgetType, hash)
 			logger.Verbose("   Server error: %v", err)
-			result.ValidationErrors = append(result.ValidationErrors, 
+			result.ValidationErrors = append(result.ValidationErrors,
 				fmt.Sprintf("Missing: %s (%s) - Hash: %s - Error: %v", asset.WidgetName, asset.WidgetType, hash, err))
 		} else {
 			// Asset exists on server
 			result.ExistingAssets++
-			logger.Verbose("✅ Asset exists on server: %s (%s) - Hash: %s", 
+			logger.Verbose("✅ Asset exists on server: %s (%s) - Hash: %s",
 				asset.WidgetName, asset.WidgetType, hash)
 			logger.Verbose("   Asset data size: %d bytes", len(assetData))
 		}

@@ -66,6 +66,13 @@
 - [ ] 4.1.3: Add file existence checking and validation (ignore file extensions)
 - [ ] 4.1.4: Implement parallel filesystem scanning
 
+### 4.4 Dual Asset Storage Investigation
+- [ ] 4.4.1: Investigate server-side asset storage: `C:\ProgramData\MultiTaction\canvus\assets`
+- [ ] 4.4.2: Investigate client-side asset storage: `C:\Users\multi\AppData\Roaming\MultiTaction\canvus-data\data-300\asset-storage`
+- [ ] 4.4.3: Understand interaction between server and client asset storage
+- [ ] 4.4.4: Determine which storage location is primary for asset restoration
+- [ ] 4.4.5: Update asset discovery and restoration logic based on findings
+
 ### 4.2 Missing Asset Detection
 - [ ] 4.2.1: Compare API asset hashes with filesystem contents (hash-only matching)
 - [ ] 4.2.2: Create missing asset identification logic
@@ -205,8 +212,8 @@
 ### Critical Path
 1. **Foundation** (1.1-1.2) → **CLI Framework** (2.1) → **API Integration** (3.1-3.2)
 2. **API Integration** → **Asset Discovery** (3.3) → **Filesystem Operations** (4.1-4.2)
-3. **Filesystem Operations** → **Backup Search** (5.1-5.2) → **Asset Restoration** (5.3)
-4. **Asset Restoration** → **Reporting** (6.1-6.3) → **Testing** (8.1-8.3)
+3. **Dual Asset Storage Investigation** (4.4) → **Filesystem Operations** (4.1-4.2) → **Backup Search** (5.1-5.2)
+4. **Backup Search** → **Asset Restoration** (5.3) → **Reporting** (6.1-6.3) → **Testing** (8.1-8.3)
 
 ### Parallel Tracks
 - **Configuration & Logging** (2.2-2.3) can run parallel with CLI development

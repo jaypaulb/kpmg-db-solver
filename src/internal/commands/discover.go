@@ -221,8 +221,8 @@ func (cmd *DiscoverCommand) printSummary(discoveryResult *canvus.DiscoveryResult
 
 	// Show server validation results if available
 	if discoveryResult.ServerValidation != nil {
-		fmt.Printf("🔍 Server Validation: %d/%d assets exist on server\n", 
-			discoveryResult.ServerValidation.ExistingAssets, 
+		fmt.Printf("🔍 Server Validation: %d/%d assets exist on server\n",
+			discoveryResult.ServerValidation.ExistingAssets,
 			discoveryResult.ServerValidation.TotalAssets)
 		if discoveryResult.ServerValidation.MissingAssets > 0 {
 			fmt.Printf("❌ Missing Assets (Server): %d\n", discoveryResult.ServerValidation.MissingAssets)

@@ -26,15 +26,3 @@ func (s *Session) UploadAsset(ctx context.Context, canvasID string, multipartBod
 	}
 	return &asset, nil
 }
-
-// ListUploadsFolder attempts to get the contents of the uploads folder for a canvas.
-// This endpoint may not be documented but could exist.
-func (s *Session) ListUploadsFolder(ctx context.Context, canvasID string) ([]Widget, error) {
-	var widgets []Widget
-	path := fmt.Sprintf("canvases/%s/uploads-folder", canvasID)
-	err := s.doRequest(ctx, "GET", path, nil, &widgets, nil, false)
-	if err != nil {
-		return nil, fmt.Errorf("ListUploadsFolder: %w", err)
-	}
-	return widgets, nil
-}

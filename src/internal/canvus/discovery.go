@@ -119,7 +119,7 @@ func DiscoverAllAssets(session *canvussdk.Session, requestsPerSecond int) (*Disc
 
 			// Extract media assets from widgets
 			widgetAssets := extractMediaAssets(ctx, session, canvas)
-			
+
 			// Extract media assets from canvas background
 			backgroundAssets := extractBackgroundAssets(ctx, session, canvas)
 
@@ -144,7 +144,7 @@ func DiscoverAllAssets(session *canvussdk.Session, requestsPerSecond int) (*Disc
 		result.Errors = append(result.Errors, fmt.Sprintf("Asset validation failed: %v", err))
 	} else {
 		result.ServerValidation = validationResult
-		logger.Info("✅ Server validation complete: %d/%d assets exist on server", 
+		logger.Info("✅ Server validation complete: %d/%d assets exist on server",
 			validationResult.ExistingAssets, validationResult.TotalAssets)
 	}
 
@@ -229,7 +229,7 @@ func extractBackgroundAssets(ctx context.Context, session *canvussdk.Session, ca
 // validateAssetsOnServer validates that assets exist on the Canvus server using GET /assets/{hash}
 func validateAssetsOnServer(ctx context.Context, session *canvussdk.Session, assets []AssetInfo) (*ServerValidationResult, error) {
 	logger := logging.GetLogger()
-	
+
 	result := &ServerValidationResult{
 		TotalAssets:     len(assets),
 		ExistingAssets:  0,
@@ -253,18 +253,19 @@ func validateAssetsOnServer(ctx context.Context, session *canvussdk.Session, ass
 
 	// Validate each unique asset
 	for hash, asset := range uniqueAssets {
-		logger.Verbose("Validating asset hash: %s (%s)", hash, asset.WidgetType)
+		logger.Verbose("Validating asset hash: %s (%s) for canvas: %s", hash, asset.WidgetType, asset.CanvasID)
 		
 		// Try to get the asset from the server
 		// We need a canvas ID for the request, so we'll use the first canvas that has this asset
 		_, err := session.GetAssetByHash(ctx, asset.CanvasID, hash)
 		if err != nil {
-			// Asset doesn't exist on server
+			// Asset doesn't exist on server or there's an error
 			result.MissingAssets++
-			logger.Verbose("❌ Asset missing on server: %s (%s) - Hash: %s", 
+			logger.Verbose("❌ Asset validation failed: %s (%s) - Hash: %s", 
 				asset.WidgetName, asset.WidgetType, hash)
+			logger.Verbose("   Server error: %v", err)
 			result.ValidationErrors = append(result.ValidationErrors, 
-				fmt.Sprintf("Missing: %s (%s) - Hash: %s", asset.WidgetName, asset.WidgetType, hash))
+				fmt.Sprintf("Missing: %s (%s) - Hash: %s - Error: %v", asset.WidgetName, asset.WidgetType, hash, err))
 		} else {
 			// Asset exists on server
 			result.ExistingAssets++

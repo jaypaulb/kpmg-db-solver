@@ -1,0 +1,98 @@
+# Ignore Cursor, reference, and old code directories
+.cursor/
+.cursor
+.cursorignore
+*.cursor
+Old-Libs/
+CanvusPythonAPI/
+
+# Existing rules
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual Environment
+venv/
+env/
+ENV/
+.env
+.venv
+env.bak/
+venv.bak/
+pythonenv*
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.*.sw[po]
+.project
+.pydevproject
+.settings
+.cursorignore
+
+# Test configuration and artifacts
+tests/config.json
+
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+cover/
+
+# Logs and local files
+*.log
+*.local
+.DS_Store
+Thumbs.db
+
+# Go
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary, build output
+*.test
+*.out
+
+# Output of the go coverage tool
+coverage.out
+
+# Go workspace file
+go.work
+
+# Dependency directories (vendor)
+vendor/
+
+# Go module files (optional, if you want to ignore local changes)
+# go.sum 

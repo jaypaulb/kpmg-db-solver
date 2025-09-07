@@ -128,7 +128,7 @@ type Note struct {
 	Text            string  `json:"text"`
 	Title           string  `json:"title"`
 	BackgroundColor string  `json:"background_color"`
-	Depth           int     `json:"depth"`
+	Depth           float64 `json:"depth"`
 	Location        *Point  `json:"location,omitempty"`
 	ParentID        string  `json:"parent_id"`
 	Pinned          bool    `json:"pinned"`
@@ -151,7 +151,7 @@ type Image struct {
 	Location         *Point  `json:"location,omitempty"`
 	State            string  `json:"state"`
 	WidgetType       string  `json:"widget_type"`
-	Depth            int     `json:"depth"`
+	Depth            float64 `json:"depth"`
 }
 
 // PDF represents a PDF asset in the Canvus system.
@@ -177,7 +177,7 @@ type Widget struct {
 	Pinned     bool    `json:"pinned"`
 	Scale      float64 `json:"scale"`
 	State      string  `json:"state"`
-	Depth      int     `json:"depth"`
+	Depth      float64 `json:"depth"`
 }
 
 type Anchor struct {
@@ -191,7 +191,7 @@ type Anchor struct {
 	Location    *Point  `json:"location,omitempty"`
 	State       string  `json:"state"`
 	WidgetType  string  `json:"widget_type"`
-	Depth       int     `json:"depth"`
+	Depth       float64 `json:"depth"`
 }
 
 type Browser struct {

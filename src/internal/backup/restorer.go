@@ -31,7 +31,7 @@ type RestoreResult struct {
 	Errors        []string // List of error messages
 }
 
-// RestoreAssets copies backup files to the assets folder
+// RestoreAssets copies backup files to the assets folder, preserving folder structure
 func (r *Restorer) RestoreAssets(searchResult *SearchResult) (*RestoreResult, error) {
 	result := &RestoreResult{
 		RestoredFiles: make([]string, 0),
@@ -45,7 +45,7 @@ func (r *Restorer) RestoreAssets(searchResult *SearchResult) (*RestoreResult, er
 		return result, nil
 	}
 
-	r.logger.Info("🔄 Restoring %d assets to: %s", len(searchResult.FoundFiles), r.assetsFolder)
+	r.logger.Info("🔄 Restoring %d assets to: %s (preserving folder structure)", len(searchResult.FoundFiles), r.assetsFolder)
 
 	// Ensure assets folder exists
 	if err := os.MkdirAll(r.assetsFolder, 0755); err != nil {
@@ -67,7 +67,8 @@ func (r *Restorer) RestoreAssets(searchResult *SearchResult) (*RestoreResult, er
 			result.FailedFiles = append(result.FailedFiles, hash)
 			result.Errors = append(result.Errors, fmt.Sprintf("%s: %v", hash, err))
 		} else {
-			r.logger.Verbose("✅ Restored: %s -> %s", backupFile.Path, r.getAssetPath(hash, backupFile.Extension))
+			targetPath := r.getAssetPath(backupFile.RelativePath)
+			r.logger.Verbose("✅ Restored: %s -> %s", backupFile.Path, targetPath)
 		}
 	}
 
@@ -79,16 +80,22 @@ func (r *Restorer) RestoreAssets(searchResult *SearchResult) (*RestoreResult, er
 	return result, nil
 }
 
-// restoreSingleFile copies a single backup file to the assets folder
+// restoreSingleFile copies a single backup file to the assets folder, preserving folder structure
 func (r *Restorer) restoreSingleFile(backupFile BackupFile, result *RestoreResult) error {
-	// Determine the target filename (hash + extension)
-	targetPath := r.getAssetPath(backupFile.Hash, backupFile.Extension)
+	// Determine the target path (preserving relative folder structure)
+	targetPath := r.getAssetPath(backupFile.RelativePath)
 
 	// Check if target file already exists
 	if r.pathExists(targetPath) {
 		r.logger.Verbose("Asset already exists, skipping: %s", targetPath)
 		result.RestoredFiles = append(result.RestoredFiles, backupFile.Hash)
 		return nil
+	}
+
+	// Ensure the target directory exists
+	targetDir := filepath.Dir(targetPath)
+	if err := os.MkdirAll(targetDir, 0755); err != nil {
+		return fmt.Errorf("failed to create target directory %s: %w", targetDir, err)
 	}
 
 	// Copy the file
@@ -104,10 +111,9 @@ func (r *Restorer) restoreSingleFile(backupFile BackupFile, result *RestoreResul
 	return nil
 }
 
-// getAssetPath returns the full path for an asset file
-func (r *Restorer) getAssetPath(hash, extension string) string {
-	filename := hash + extension
-	return filepath.Join(r.assetsFolder, filename)
+// getAssetPath returns the full path for an asset file, preserving folder structure
+func (r *Restorer) getAssetPath(relativePath string) string {
+	return filepath.Join(r.assetsFolder, relativePath)
 }
 
 // copyFile copies a file from source to destination

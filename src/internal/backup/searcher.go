@@ -17,6 +17,7 @@ type BackupFile struct {
 	Extension    string    // File extension
 	ModifiedTime time.Time // File modification time
 	Size         int64     // File size in bytes
+	RelativePath string    // Relative path from backup root (preserves folder structure)
 }
 
 // SearchResult contains the results of a backup search
@@ -116,12 +117,20 @@ func (s *Searcher) searchBackupFolder(backupRoot string, missingSet map[string]b
 
 		// Check if this hash is one we're looking for
 		if missingSet[hash] {
+			// Calculate relative path from backup root to preserve folder structure
+			relPath, err := filepath.Rel(backupRoot, path)
+			if err != nil {
+				// If we can't calculate relative path, use just the filename
+				relPath = info.Name()
+			}
+			
 			backupFile := BackupFile{
 				Path:         path,
 				Hash:         hash,
 				Extension:    ext,
 				ModifiedTime: info.ModTime(),
 				Size:         info.Size(),
+				RelativePath: relPath,
 			}
 
 			// Add to results (will be sorted by modification time later)

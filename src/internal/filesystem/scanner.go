@@ -10,10 +10,11 @@ import (
 
 // FileInfo represents information about a file in the assets folder
 type FileInfo struct {
-	Path     string `json:"path"`
-	Hash     string `json:"hash"`
-	Filename string `json:"filename"`
-	Size     int64  `json:"size"`
+	Path         string `json:"path"`
+	Hash         string `json:"hash"`
+	Filename     string `json:"filename"`
+	Size         int64  `json:"size"`
+	RelativePath string `json:"relative_path"` // Relative path from assets root (preserves folder structure)
 }
 
 // ScanResult represents the result of filesystem scanning
@@ -54,11 +55,19 @@ func ScanAssetsFolder(assetsPath string) (*ScanResult, error) {
 			return nil // Skip files that don't match hash pattern
 		}
 
+		// Calculate relative path from assets root to preserve folder structure
+		relPath, err := filepath.Rel(assetsPath, path)
+		if err != nil {
+			// If we can't calculate relative path, use just the filename
+			relPath = info.Name()
+		}
+
 		fileInfo := FileInfo{
-			Path:     path,
-			Hash:     hash,
-			Filename: info.Name(),
-			Size:     info.Size(),
+			Path:         path,
+			Hash:         hash,
+			Filename:     info.Name(),
+			Size:         info.Size(),
+			RelativePath: relPath,
 		}
 
 		result.Files = append(result.Files, fileInfo)
@@ -160,11 +169,19 @@ func ParallelScanAssetsFolder(assetsPath string, numWorkers int) (*ScanResult, e
 					continue // Skip files that don't match hash pattern
 				}
 
+				// Calculate relative path from assets root to preserve folder structure
+				relPath, err := filepath.Rel(assetsPath, path)
+				if err != nil {
+					// If we can't calculate relative path, use just the filename
+					relPath = info.Name()
+				}
+
 				fileInfo := FileInfo{
-					Path:     path,
-					Hash:     hash,
-					Filename: info.Name(),
-					Size:     info.Size(),
+					Path:         path,
+					Hash:         hash,
+					Filename:     info.Name(),
+					Size:         info.Size(),
+					RelativePath: relPath,
 				}
 
 				results <- fileInfo

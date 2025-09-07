@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/jaypaulb/kpmg-db-solver/internal/backup"
 	"github.com/jaypaulb/kpmg-db-solver/internal/canvus"
 	"github.com/jaypaulb/kpmg-db-solver/internal/config"
 	"github.com/jaypaulb/kpmg-db-solver/internal/filesystem"
@@ -36,19 +37,15 @@ func (cmd *DiscoverCommand) Execute() error {
 
 	// Create Canvus session using existing SDK
 	ctx := context.Background()
-	apiURL := cmd.config.GetCanvusAPIURL()
-	logger.Verbose("Using API URL: %s", apiURL)
-	
 	var session *canvussdk.Session
 	if cmd.config.CanvusServer.InsecureTLS {
-		session = canvussdk.NewSession(apiURL, canvussdk.WithInsecureTLS())
+		session = canvussdk.NewSession(cmd.config.GetCanvusAPIURL(), canvussdk.WithInsecureTLS())
 	} else {
-		session = canvussdk.NewSession(apiURL)
+		session = canvussdk.NewSession(cmd.config.GetCanvusAPIURL())
 	}
 
 	// Authenticate using existing SDK
 	logger.Info("🔐 Authenticating with Canvus Server...")
-	logger.Verbose("Login credentials - Username: %s, Password: [HIDDEN]", cmd.config.CanvusServer.Username)
 	err := session.Login(ctx, cmd.config.CanvusServer.Username, cmd.config.CanvusServer.Password)
 	if err != nil {
 		logger.Error("Authentication failed: %v", err)
@@ -94,10 +91,57 @@ func (cmd *DiscoverCommand) Execute() error {
 	missingAssets := filesystem.FindMissingAssets(assetHashes, scanResult)
 	logger.Info("❌ Missing assets: %d", len(missingAssets))
 
+	// Search for missing assets in backup folders
+	var backupSearchResult *backup.SearchResult
+	if len(missingAssets) > 0 {
+		logger.Info("🔍 Searching for missing assets in backup folder...")
+		searcher := backup.NewSearcher(cmd.config.Paths.BackupRootFolder)
+		backupSearchResult, err = searcher.SearchForAssets(missingAssets)
+		if err != nil {
+			logger.Error("Backup search failed: %v", err)
+			return fmt.Errorf("backup search failed: %w", err)
+		}
+
+		// Sort backup files by modification time (newest first)
+		searcher.SortBackupFiles(backupSearchResult)
+
+		// Offer to restore found assets
+		if len(backupSearchResult.FoundFiles) > 0 {
+			logger.Info("💾 Found %d missing assets in backup folder", len(backupSearchResult.FoundFiles))
+			logger.Info("🔄 Would you like to restore these assets? (y/N): ")
+
+			var response string
+			fmt.Scanln(&response)
+			if strings.ToLower(response) == "y" || strings.ToLower(response) == "yes" {
+				logger.Info("🔄 Restoring assets...")
+				restorer := backup.NewRestorer(cmd.config.Paths.AssetsFolder)
+				restoreResult, err := restorer.RestoreAssets(backupSearchResult)
+				if err != nil {
+					logger.Error("Asset restoration failed: %v", err)
+					return fmt.Errorf("asset restoration failed: %w", err)
+				}
+
+				logger.Info("✅ Restoration completed:")
+				logger.Info("   ✅ Files restored: %d", len(restoreResult.RestoredFiles))
+				logger.Info("   ❌ Files failed: %d", len(restoreResult.FailedFiles))
+				logger.Info("   📊 Total bytes: %d", restoreResult.TotalBytes)
+
+				if len(restoreResult.Errors) > 0 {
+					logger.Warn("Restoration errors:")
+					for _, errMsg := range restoreResult.Errors {
+						logger.Warn("   %s", errMsg)
+					}
+				}
+			} else {
+				logger.Info("⏭️ Skipping asset restoration")
+			}
+		}
+	}
+
 	// Generate reports
 	if len(missingAssets) > 0 {
 		logger.Info("📋 Generating reports...")
-		err = cmd.generateReports(discoveryResult, missingAssets, uniqueAssets)
+		err = cmd.generateReports(discoveryResult, missingAssets, uniqueAssets, backupSearchResult)
 		if err != nil {
 			logger.Error("Report generation failed: %v", err)
 			return fmt.Errorf("report generation failed: %w", err)
@@ -113,7 +157,7 @@ func (cmd *DiscoverCommand) Execute() error {
 }
 
 // generateReports generates detailed and CSV reports
-func (cmd *DiscoverCommand) generateReports(discoveryResult *canvus.DiscoveryResult, missingAssets []string, uniqueAssets []canvus.AssetInfo) error {
+func (cmd *DiscoverCommand) generateReports(discoveryResult *canvus.DiscoveryResult, missingAssets []string, uniqueAssets []canvus.AssetInfo, backupSearchResult *backup.SearchResult) error {
 	// Create missing assets map for quick lookup
 	missingMap := make(map[string]bool)
 	for _, hash := range missingAssets {
@@ -129,13 +173,13 @@ func (cmd *DiscoverCommand) generateReports(discoveryResult *canvus.DiscoveryRes
 	}
 
 	// Generate detailed report
-	err := cmd.generateDetailedReport(missingAssetInfos)
+	err := cmd.generateDetailedReport(missingAssetInfos, backupSearchResult)
 	if err != nil {
 		return fmt.Errorf("failed to generate detailed report: %w", err)
 	}
 
 	// Generate CSV report
-	err = cmd.generateCSVReport(missingAssetInfos)
+	err = cmd.generateCSVReport(missingAssetInfos, backupSearchResult)
 	if err != nil {
 		return fmt.Errorf("failed to generate CSV report: %w", err)
 	}
@@ -144,7 +188,7 @@ func (cmd *DiscoverCommand) generateReports(discoveryResult *canvus.DiscoveryRes
 }
 
 // generateDetailedReport generates a detailed text report
-func (cmd *DiscoverCommand) generateDetailedReport(missingAssets []canvus.AssetInfo) error {
+func (cmd *DiscoverCommand) generateDetailedReport(missingAssets []canvus.AssetInfo, backupSearchResult *backup.SearchResult) error {
 	reportPath := "missing_assets_report.txt"
 
 	// Group assets by canvas
@@ -159,12 +203,25 @@ func (cmd *DiscoverCommand) generateDetailedReport(missingAssets []canvus.AssetI
 	content += fmt.Sprintf("Total Missing Assets: %d\n\n", len(missingAssets))
 
 	for canvasName, assets := range canvasMap {
-		content += fmt.Sprintf("Canvas: %s (ID: %d)\n", canvasName, assets[0].CanvasID)
+		content += fmt.Sprintf("Canvas: %s (ID: %s)\n", canvasName, assets[0].CanvasID)
 		for _, asset := range assets {
-			content += fmt.Sprintf("  Widget: %s (ID: %d, Type: %s)\n", asset.WidgetName, asset.WidgetID, asset.WidgetType)
+			content += fmt.Sprintf("  Widget: %s (ID: %s, Type: %s)\n", asset.WidgetName, asset.WidgetID, asset.WidgetType)
 			content += fmt.Sprintf("    Hash: %s\n", asset.Hash)
 			if asset.OriginalFilename != "" {
 				content += fmt.Sprintf("    Original Filename: %s\n", asset.OriginalFilename)
+			}
+
+			// Add backup status
+			if backupSearchResult != nil {
+				if backupFiles, found := backupSearchResult.FoundFiles[asset.Hash]; found && len(backupFiles) > 0 {
+					bestBackup := backupFiles[0] // Newest file
+					content += fmt.Sprintf("    Backup Status: ✅ Found in backup\n")
+					content += fmt.Sprintf("    Backup Path: %s\n", bestBackup.Path)
+					content += fmt.Sprintf("    Backup Size: %d bytes\n", bestBackup.Size)
+					content += fmt.Sprintf("    Backup Modified: %s\n", bestBackup.ModifiedTime.Format("2006-01-02 15:04:05"))
+				} else {
+					content += fmt.Sprintf("    Backup Status: ❌ Not found in any backup\n")
+				}
 			}
 			content += "\n"
 		}
@@ -181,14 +238,29 @@ func (cmd *DiscoverCommand) generateDetailedReport(missingAssets []canvus.AssetI
 }
 
 // generateCSVReport generates a CSV report
-func (cmd *DiscoverCommand) generateCSVReport(missingAssets []canvus.AssetInfo) error {
+func (cmd *DiscoverCommand) generateCSVReport(missingAssets []canvus.AssetInfo, backupSearchResult *backup.SearchResult) error {
 	reportPath := "missing_assets.csv"
 
 	// Generate CSV content
-	content := "Hash,WidgetType,OriginalFilename,CanvasID,CanvasName,WidgetID,WidgetName\n"
+	content := "Hash,WidgetType,OriginalFilename,CanvasID,CanvasName,WidgetID,WidgetName,BackupStatus,BackupPath,BackupSize,BackupModified\n"
 
 	for _, asset := range missingAssets {
-		content += fmt.Sprintf("%s,%s,%s,%d,%s,%d,%s\n",
+		backupStatus := "Not Found"
+		backupPath := ""
+		backupSize := ""
+		backupModified := ""
+
+		if backupSearchResult != nil {
+			if backupFiles, found := backupSearchResult.FoundFiles[asset.Hash]; found && len(backupFiles) > 0 {
+				bestBackup := backupFiles[0] // Newest file
+				backupStatus = "Found"
+				backupPath = bestBackup.Path
+				backupSize = fmt.Sprintf("%d", bestBackup.Size)
+				backupModified = bestBackup.ModifiedTime.Format("2006-01-02 15:04:05")
+			}
+		}
+
+		content += fmt.Sprintf("%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n",
 			asset.Hash,
 			asset.WidgetType,
 			asset.OriginalFilename,
@@ -196,6 +268,10 @@ func (cmd *DiscoverCommand) generateCSVReport(missingAssets []canvus.AssetInfo) 
 			asset.CanvasName,
 			asset.WidgetID,
 			asset.WidgetName,
+			backupStatus,
+			backupPath,
+			backupSize,
+			backupModified,
 		)
 	}
 

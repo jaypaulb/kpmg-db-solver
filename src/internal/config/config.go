@@ -28,9 +28,9 @@ type CanvusServerConfig struct {
 
 // PathsConfig contains file system paths
 type PathsConfig struct {
-	AssetsFolder    string `mapstructure:"assets_folder"`
+	AssetsFolder     string `mapstructure:"assets_folder"`
 	BackupRootFolder string `mapstructure:"backup_root_folder"`
-	OutputFolder    string `mapstructure:"output_folder"`
+	OutputFolder     string `mapstructure:"output_folder"`
 }
 
 // LoggingConfig contains logging settings

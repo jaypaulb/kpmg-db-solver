@@ -111,11 +111,6 @@ func (s *Session) doRequest(ctx context.Context, method, endpoint string, body i
 		return err
 	}
 	u.Path = path.Join(u.Path, endpoint)
-	
-	// Debug logging for URL construction
-	if endpoint == "users/login" {
-		fmt.Printf("DEBUG: Login URL constructed: %s\n", u.String())
-	}
 
 	// Add query parameters if provided
 	if queryParams != nil && len(queryParams) > 0 {
@@ -150,11 +145,6 @@ func (s *Session) doRequest(ctx context.Context, method, endpoint string, body i
 				}
 				reqBody = bytes.NewReader(b)
 				ct = "application/json"
-				
-				// Debug logging for login request body
-				if endpoint == "users/login" {
-					fmt.Printf("DEBUG: Login request body: %s\n", string(b))
-				}
 			}
 		}
 

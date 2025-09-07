@@ -1,6 +1,7 @@
 package backup
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"sort"
@@ -44,6 +45,7 @@ func NewSearcher(backupRootFolder string) *Searcher {
 
 // SearchForAssets searches for missing assets in backup folders
 // Returns a map of hash -> list of backup files (newest first)
+// Looks for backup folders with pattern: {timestamp}_{date}_{version}_mt-canvus_backup\assets\
 func (s *Searcher) SearchForAssets(missingHashes []string) (*SearchResult, error) {
 	result := &SearchResult{
 		FoundFiles:    make(map[string][]BackupFile),
@@ -71,10 +73,10 @@ func (s *Searcher) SearchForAssets(missingHashes []string) (*SearchResult, error
 		return result, nil
 	}
 
-	// Search the backup root folder (recursively through all subfolders)
-	err := s.searchBackupFolder(s.backupRootFolder, missingSet, result)
+	// Find backup folders with the expected pattern and search their assets subfolder
+	err := s.searchBackupFolders(s.backupRootFolder, missingSet, result)
 	if err != nil {
-		s.logger.Error("Error searching backup folder %s: %v", s.backupRootFolder, err)
+		s.logger.Error("Error searching backup folders %s: %v", s.backupRootFolder, err)
 		return result, err
 	}
 
@@ -94,6 +96,52 @@ func (s *Searcher) SearchForAssets(missingHashes []string) (*SearchResult, error
 	s.logger.Info("   ❌ Assets still missing: %d", len(result.MissingHashes))
 
 	return result, nil
+}
+
+// searchBackupFolders finds backup folders with the expected pattern and searches their assets subfolder
+func (s *Searcher) searchBackupFolders(backupRoot string, missingSet map[string]bool, result *SearchResult) error {
+	// Look for backup folders with pattern: {timestamp}_{date}_{version}_mt-canvus_backup
+	entries, err := os.ReadDir(backupRoot)
+	if err != nil {
+		return fmt.Errorf("failed to read backup root directory: %w", err)
+	}
+
+	backupFolders := make([]string, 0)
+	for _, entry := range entries {
+		if entry.IsDir() && s.isBackupFolder(entry.Name()) {
+			backupPath := filepath.Join(backupRoot, entry.Name())
+			assetsPath := filepath.Join(backupPath, "assets")
+			
+			// Check if this backup folder has an assets subfolder
+			if s.pathExists(assetsPath) {
+				backupFolders = append(backupFolders, assetsPath)
+				s.logger.Verbose("Found backup assets folder: %s", assetsPath)
+			}
+		}
+	}
+
+	if len(backupFolders) == 0 {
+		s.logger.Warn("No backup folders with assets subfolder found in: %s", backupRoot)
+		return nil
+	}
+
+	// Search each backup assets folder
+	for _, assetsPath := range backupFolders {
+		err := s.searchBackupFolder(assetsPath, missingSet, result)
+		if err != nil {
+			s.logger.Error("Error searching backup folder %s: %v", assetsPath, err)
+			continue
+		}
+	}
+
+	return nil
+}
+
+// isBackupFolder checks if a folder name matches the backup pattern
+func (s *Searcher) isBackupFolder(folderName string) bool {
+	// Pattern: {timestamp}_{date}_{version}_mt-canvus_backup
+	// Example: 1757261054_2025_09_07_3.3.0_mt-canvus_backup
+	return strings.Contains(folderName, "_mt-canvus_backup")
 }
 
 // searchBackupFolder recursively searches a backup folder for missing assets
@@ -117,7 +165,8 @@ func (s *Searcher) searchBackupFolder(backupRoot string, missingSet map[string]b
 
 		// Check if this hash is one we're looking for
 		if missingSet[hash] {
-			// Calculate relative path from backup root to preserve folder structure
+			// Calculate relative path from the assets subfolder to preserve folder structure
+			// This ensures the path starts from assets\ and aligns with the target assets\ folder
 			relPath, err := filepath.Rel(backupRoot, path)
 			if err != nil {
 				// If we can't calculate relative path, use just the filename

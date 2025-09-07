@@ -34,11 +34,11 @@ func (p *InteractivePrompts) PromptForConfig() (*Config, error) {
 	// Canvus Server configuration
 	fmt.Println("📡 Canvus Server Configuration")
 	fmt.Println("-------------------------------")
-	fmt.Println("ℹ️  Server URL: http://localhost:8080 (local access only)")
-	
+	fmt.Println("ℹ️  Server URL: https://localhost:443 (local access only)")
+
 	config.CanvusServer.Username = p.promptString("Username", "", true)
 	config.CanvusServer.Password = p.promptPassword("Password")
-	
+
 	timeout := p.promptInt("API Timeout (seconds)", 30)
 	config.CanvusServer.Timeout = timeout
 

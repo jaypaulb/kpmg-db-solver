@@ -52,7 +52,7 @@ type PerformanceConfig struct {
 func DefaultConfig() *Config {
 	return &Config{
 		CanvusServer: CanvusServerConfig{
-			URL:      "http://localhost:8080", // Default localhost for local file access
+			URL:      "https://localhost:443", // Default localhost for local file access
 			Username: "",
 			Password: "",
 			Timeout:  30,
@@ -122,7 +122,7 @@ func (c *Config) Validate() error {
 	// Validate Canvus Server settings
 	// URL is always localhost for local file access, so we just ensure it's set
 	if c.CanvusServer.URL == "" {
-		c.CanvusServer.URL = "http://localhost:8080" // Default to localhost
+		c.CanvusServer.URL = "https://localhost:443" // Default to localhost with HTTPS
 	}
 	if c.CanvusServer.Username == "" {
 		return fmt.Errorf("canvus server username is required")

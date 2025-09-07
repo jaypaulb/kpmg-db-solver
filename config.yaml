@@ -1,5 +1,5 @@
 canvus_server:
-  url: "http://localhost:8080"  # Always localhost for local file access
+  url: "https://localhost:443"  # Always localhost for local file access
   username: "admin"
   password: "password123"
   timeout: 30

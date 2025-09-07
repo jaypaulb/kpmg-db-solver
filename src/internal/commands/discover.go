@@ -10,6 +10,7 @@ import (
 	"github.com/jaypaulb/kpmg-db-solver/internal/canvus"
 	"github.com/jaypaulb/kpmg-db-solver/internal/config"
 	"github.com/jaypaulb/kpmg-db-solver/internal/filesystem"
+	"github.com/jaypaulb/kpmg-db-solver/internal/logging"
 	canvussdk "canvus-go-api/canvus"
 )
 
@@ -27,9 +28,11 @@ func NewDiscoverCommand(cfg *config.Config) *DiscoverCommand {
 
 // Execute runs the discover command
 func (cmd *DiscoverCommand) Execute() error {
-	fmt.Println("🔍 Starting asset discovery...")
-	fmt.Printf("📡 Connecting to Canvus Server: %s\n", cmd.config.CanvusServer.URL)
-	fmt.Printf("📁 Scanning assets folder: %s\n", cmd.config.Paths.AssetsFolder)
+	logger := logging.GetLogger()
+	
+	logger.Info("🔍 Starting asset discovery...")
+	logger.Info("📡 Connecting to Canvus Server: %s", cmd.config.CanvusServer.URL)
+	logger.Info("📁 Scanning assets folder: %s", cmd.config.Paths.AssetsFolder)
 
 	// Create Canvus session using existing SDK
 	ctx := context.Background()
@@ -41,28 +44,30 @@ func (cmd *DiscoverCommand) Execute() error {
 	}
 
 	// Authenticate using existing SDK
-	fmt.Println("🔐 Authenticating with Canvus Server...")
+	logger.Info("🔐 Authenticating with Canvus Server...")
 	err := session.Login(ctx, cmd.config.CanvusServer.Username, cmd.config.CanvusServer.Password)
 	if err != nil {
+		logger.Error("Authentication failed: %v", err)
 		return fmt.Errorf("authentication failed: %w", err)
 	}
 	defer session.Logout(ctx)
-
-	fmt.Printf("✅ Authenticated successfully\n")
+	
+	logger.Info("✅ Successfully authenticated with Canvus Server")
 
 	// Discover assets from API
-	fmt.Println("📊 Discovering assets from Canvus API...")
+	logger.Info("📊 Discovering assets from Canvus API...")
 	discoveryResult, err := canvus.DiscoverAllAssets(session, cmd.config.Performance.MaxConcurrentAPI)
 	if err != nil {
+		logger.Error("Asset discovery failed: %v", err)
 		return fmt.Errorf("asset discovery failed: %w", err)
 	}
 
-	fmt.Printf("📈 Found %d canvases with %d total media assets\n",
+	logger.Info("📈 Found %d canvases with %d total media assets",
 		len(discoveryResult.Canvases), len(discoveryResult.Assets))
 
 	// Get unique assets
 	uniqueAssets := discoveryResult.GetUniqueAssets()
-	fmt.Printf("🔗 Unique assets (deduplicated): %d\n", len(uniqueAssets))
+	logger.Info("🔗 Unique assets (deduplicated): %d", len(uniqueAssets))
 
 	// Extract asset hashes for filesystem comparison
 	assetHashes := make([]string, len(uniqueAssets))
@@ -71,28 +76,30 @@ func (cmd *DiscoverCommand) Execute() error {
 	}
 
 	// Scan filesystem
-	fmt.Println("💾 Scanning assets folder...")
+	logger.Info("💾 Scanning assets folder...")
 	scanResult, err := filesystem.ScanAssetsFolder(cmd.config.Paths.AssetsFolder)
 	if err != nil {
+		logger.Error("Filesystem scan failed: %v", err)
 		return fmt.Errorf("filesystem scan failed: %w", err)
 	}
 
-	fmt.Printf("📂 Found %d files in assets folder (%.2f MB total)\n",
+	logger.Info("📂 Found %d files in assets folder (%.2f MB total)",
 		len(scanResult.Files), float64(scanResult.TotalSize)/(1024*1024))
 
 	// Find missing assets
 	missingAssets := filesystem.FindMissingAssets(assetHashes, scanResult)
-	fmt.Printf("❌ Missing assets: %d\n", len(missingAssets))
+	logger.Info("❌ Missing assets: %d", len(missingAssets))
 
 	// Generate reports
 	if len(missingAssets) > 0 {
-		fmt.Println("📋 Generating reports...")
+		logger.Info("📋 Generating reports...")
 		err = cmd.generateReports(discoveryResult, missingAssets, uniqueAssets)
 		if err != nil {
+			logger.Error("Report generation failed: %v", err)
 			return fmt.Errorf("report generation failed: %w", err)
 		}
 	} else {
-		fmt.Println("✅ No missing assets found!")
+		logger.Info("✅ No missing assets found!")
 	}
 
 	// Print summary

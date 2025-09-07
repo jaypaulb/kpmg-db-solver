@@ -66,8 +66,8 @@ func DefaultConfig() *Config {
 		},
 		Logging: LoggingConfig{
 			Level:      "info",
-			Verbose:    false,
-			LogToFile:  false,
+			Verbose:    true,  // Enable verbose mode by default to show API responses
+			LogToFile:  true,  // Enable log file by default
 			LogFile:    "kpmg-db-solver.log",
 		},
 		Performance: PerformanceConfig{
@@ -130,12 +130,12 @@ func (c *Config) preserveDefaults() {
 	if c.Paths.AssetsFolder == "" {
 		c.Paths.AssetsFolder = defaults.Paths.AssetsFolder
 	}
-	
+
 	// Preserve default backup root folder if empty
 	if c.Paths.BackupRootFolder == "" {
 		c.Paths.BackupRootFolder = defaults.Paths.BackupRootFolder
 	}
-	
+
 	// Preserve default output folder if empty
 	if c.Paths.OutputFolder == "" {
 		c.Paths.OutputFolder = defaults.Paths.OutputFolder

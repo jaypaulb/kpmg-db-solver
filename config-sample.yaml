@@ -18,8 +18,8 @@ paths:
 # Logging Configuration
 logging:
   level: "info"        # debug, info, warn, error
-  verbose: false
-  log_to_file: false
+  verbose: true        # Enable verbose mode to see detailed API responses
+  log_to_file: true    # Enable logging to file
   log_file: "kpmg-db-solver.log"
 
 # Performance Settings

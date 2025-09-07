@@ -7,6 +7,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/jaypaulb/kpmg-db-solver/internal/logging"
 	canvussdk "canvus-go-api/canvus"
 )
 
@@ -127,30 +128,51 @@ func DiscoverAllAssets(session *canvussdk.Session, requestsPerSecond int) (*Disc
 // extractMediaAssets extracts media assets from widgets by calling the generic ListWidgets endpoint
 func extractMediaAssets(ctx context.Context, session *canvussdk.Session, canvas canvussdk.Canvas) []AssetInfo {
 	var assets []AssetInfo
+	logger := logging.GetLogger()
 
 	// Get all widgets for this canvas
+	logger.Verbose("Getting widgets for canvas '%s' (ID: %d)", canvas.Name, canvas.ID)
 	widgets, err := session.ListWidgets(ctx, fmt.Sprintf("%d", canvas.ID), nil)
 	if err != nil {
+		logger.Error("Failed to get widgets for canvas '%s' (ID: %d): %v", canvas.Name, canvas.ID, err)
 		return assets // Return empty slice if we can't get widgets
 	}
 
+	logger.Verbose("Found %d widgets in canvas '%s' (ID: %d)", len(widgets), canvas.Name, canvas.ID)
+	
+	// Log the raw widget response in verbose mode
+	if len(widgets) > 0 {
+		logger.Verbose("Widget response for canvas '%s':", canvas.Name)
+		for i, widget := range widgets {
+			logger.Verbose("  Widget %d: ID=%s, Type=%s", i+1, widget.ID, widget.WidgetType)
+		}
+	}
+
 	// Process each widget and extract media assets
+	mediaCount := 0
 	for _, widget := range widgets {
 		// Get the specific widget details to check for hash field
 		asset := extractAssetFromWidget(ctx, session, canvas, widget)
 		if asset != nil {
 			assets = append(assets, *asset)
+			mediaCount++
+			logger.Verbose("Found media asset: %s (%s) - Hash: %s", asset.WidgetName, asset.WidgetType, asset.Hash)
 		}
 	}
 
+	logger.Verbose("Extracted %d media assets from canvas '%s' (ID: %d)", mediaCount, canvas.Name, canvas.ID)
 	return assets
 }
 
 // extractAssetFromWidget extracts asset information from a widget if it has a hash field
 func extractAssetFromWidget(ctx context.Context, session *canvussdk.Session, canvas canvussdk.Canvas, widget canvussdk.Widget) *AssetInfo {
+	logger := logging.GetLogger()
+	
 	// Get the specific widget details based on type
 	var widgetDetails interface{}
 	var err error
+
+	logger.Verbose("Getting details for widget ID=%s, Type=%s in canvas '%s'", widget.ID, widget.WidgetType, canvas.Name)
 
 	switch widget.WidgetType {
 	case "Image":
@@ -160,10 +182,12 @@ func extractAssetFromWidget(ctx context.Context, session *canvussdk.Session, can
 	case "Video":
 		widgetDetails, err = session.GetVideo(ctx, fmt.Sprintf("%d", canvas.ID), widget.ID)
 	default:
+		logger.Verbose("Skipping non-media widget type: %s", widget.WidgetType)
 		return nil // Not a media widget type
 	}
 
 	if err != nil {
+		logger.Verbose("Failed to get widget details for ID=%s, Type=%s: %v", widget.ID, widget.WidgetType, err)
 		return nil
 	}
 
@@ -177,6 +201,7 @@ func extractAssetFromWidget(ctx context.Context, session *canvussdk.Session, can
 		if hashField := widgetValue.Elem().FieldByName("Hash"); hashField.IsValid() && hashField.CanInterface() {
 			if hashStr, ok := hashField.Interface().(string); ok && hashStr != "" {
 				hash = hashStr
+				logger.Verbose("Found hash for widget ID=%s: %s", widget.ID, hash)
 			}
 		}
 
@@ -184,6 +209,7 @@ func extractAssetFromWidget(ctx context.Context, session *canvussdk.Session, can
 		if filenameField := widgetValue.Elem().FieldByName("OriginalFilename"); filenameField.IsValid() && filenameField.CanInterface() {
 			if filenameStr, ok := filenameField.Interface().(string); ok {
 				filename = filenameStr
+				logger.Verbose("Found filename for widget ID=%s: %s", widget.ID, filename)
 			}
 		}
 
@@ -191,16 +217,19 @@ func extractAssetFromWidget(ctx context.Context, session *canvussdk.Session, can
 		if nameField := widgetValue.Elem().FieldByName("Title"); nameField.IsValid() && nameField.CanInterface() {
 			if nameStr, ok := nameField.Interface().(string); ok {
 				name = nameStr
+				logger.Verbose("Found title for widget ID=%s: %s", widget.ID, name)
 			}
 		} else if nameField := widgetValue.Elem().FieldByName("Name"); nameField.IsValid() && nameField.CanInterface() {
 			if nameStr, ok := nameField.Interface().(string); ok {
 				name = nameStr
+				logger.Verbose("Found name for widget ID=%s: %s", widget.ID, name)
 			}
 		}
 	}
 
 	// Only return asset if it has a hash (media assets only)
 	if hash == "" {
+		logger.Verbose("No hash found for widget ID=%s, Type=%s - not a media asset", widget.ID, widget.WidgetType)
 		return nil
 	}
 

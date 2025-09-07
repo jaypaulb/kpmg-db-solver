@@ -38,13 +38,13 @@ The current manual workaround of re-uploading files to make them reappear is ent
 ### Core Features
 1. **Canvus API Integration**
    - Connect to Canvus Server 3.3.0 via username/password authentication
-   - Query all workspaces and canvases to get widget asset information
-   - Extract asset hashes and metadata from widget JSON responses
+   - Query all canvases directly (no workspace enumeration needed)
+   - Extract media asset hashes and metadata from widget JSON responses (video, image, PDF only)
 
 2. **Filesystem Analysis**
    - Scan active assets folder for existing files
-   - Compare API asset hashes against filesystem contents
-   - Identify missing assets by hash filename pattern: `{hash_value}.{filetype}`
+   - Compare API asset hashes against filesystem contents (hash-only matching)
+   - Identify missing assets by hash value (ignore file extensions for matching)
 
 3. **Backup Search & Recovery**
    - Search multiple backup folders recursively (newest to oldest)
@@ -54,6 +54,7 @@ The current manual workaround of re-uploading files to make them reappear is ent
 
 4. **Parallel Processing**
    - Simultaneous filesystem scanning and API querying for performance
+   - Concurrent canvas processing with rate limiting (100/sec → 50/sec → 25/sec)
    - Concurrent backup searching across multiple backup locations
 
 5. **Comprehensive Reporting**
@@ -61,8 +62,8 @@ The current manual workaround of re-uploading files to make them reappear is ent
      ```
      Missing Files
      CanvasName - CanvasID
-       WidgetName - Hash
-       WidgetName - Hash
+       WidgetName (Type: Pdf) - Hash: 347b3c308971
+       WidgetName (Type: Image) - Hash: a1b2c3d4e5f6
      ```
    - CSV export with `{hash}.{ext}` filenames for restoration tracking
    - Error reporting for assets found in DB but not in any backup
@@ -105,6 +106,7 @@ The current manual workaround of re-uploading files to make them reappear is ent
 
 ### Assumptions
 - **File Naming Convention**: Assets are stored as `{hash_value}.{filetype}`
+- **Hash Uniqueness**: Hash collision risk is negligible for asset matching
 - **Backup Integrity**: Backup files are intact and accessible
 - **Network Connectivity**: Stable connection to Canvus Server during operation
 - **Admin Privileges**: Tool will run with administrator privileges for file operations

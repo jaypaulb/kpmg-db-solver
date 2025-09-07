@@ -46,30 +46,30 @@
 - [ ] 3.1.4: Create API client wrapper with error handling
 
 ### 3.2 Data Retrieval
-- [ ] 3.2.1: Implement workspace listing functionality
-- [ ] 3.2.2: Add canvas enumeration for each workspace
-- [ ] 3.2.3: Create widget asset extraction from canvas data
-- [ ] 3.2.4: Implement parallel API calls for performance
-- [ ] 3.2.5: Add retry logic and rate limiting
+- [ ] 3.2.1: Implement direct canvas listing functionality (no workspaces)
+- [ ] 3.2.2: Add widget enumeration for each canvas
+- [ ] 3.2.3: Create media asset extraction from widget data (video, image, PDF only)
+- [ ] 3.2.4: Implement parallel canvas API calls for performance
+- [ ] 3.2.5: Add retry logic and rate limiting (100/sec → 50/sec → 25/sec)
 
 ### 3.3 Asset Discovery
-- [ ] 3.3.1: Parse widget JSON to extract asset hashes
-- [ ] 3.3.2: Create asset metadata structure (hash, filename, canvas info)
+- [ ] 3.3.1: Parse widget JSON to extract asset hashes from "hash" field
+- [ ] 3.3.2: Create asset metadata structure (hash, widget_type, original_filename, canvas info)
 - [ ] 3.3.3: Implement asset deduplication across canvases
-- [ ] 3.3.4: Add asset type detection and validation
+- [ ] 3.3.4: Add media asset type detection (video, image, PDF only)
 
 ## Phase 4: Filesystem Operations
 
 ### 4.1 Asset Folder Scanning
 - [ ] 4.1.1: Implement recursive directory scanning
-- [ ] 4.1.2: Create file hash extraction from filenames
-- [ ] 4.1.3: Add file existence checking and validation
+- [ ] 4.1.2: Create file hash extraction from filenames (hash-only matching)
+- [ ] 4.1.3: Add file existence checking and validation (ignore file extensions)
 - [ ] 4.1.4: Implement parallel filesystem scanning
 
 ### 4.2 Missing Asset Detection
-- [ ] 4.2.1: Compare API asset hashes with filesystem contents
+- [ ] 4.2.1: Compare API asset hashes with filesystem contents (hash-only matching)
 - [ ] 4.2.2: Create missing asset identification logic
-- [ ] 4.2.3: Add asset metadata correlation (canvas, widget info)
+- [ ] 4.2.3: Add asset metadata correlation (canvas, widget info, no workspace)
 - [ ] 4.2.4: Implement missing asset reporting structure
 
 ### 4.3 File Operations
@@ -102,8 +102,8 @@
 
 ### 6.1 Report Generation
 - [ ] 6.1.1: Create detailed missing asset report template
-- [ ] 6.1.2: Implement canvas-grouped asset reporting
-- [ ] 6.1.3: Add asset metadata inclusion (widget names, hashes)
+- [ ] 6.1.2: Implement canvas-grouped asset reporting (no workspace grouping)
+- [ ] 6.1.3: Add asset metadata inclusion (widget names, hashes, widget_type)
 - [ ] 6.1.4: Create restoration summary reporting
 
 ### 6.2 CSV Export

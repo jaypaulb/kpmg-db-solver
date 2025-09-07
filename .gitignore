@@ -4,8 +4,6 @@
 *.dll
 *.so
 *.dylib
-kpmg-db-solver
-kpmg-db-solver.exe
 
 # Test binary, built with `go test -c`
 *.test
@@ -50,7 +48,6 @@ temp/
 tmp/
 
 # Build artifacts
-build/
 dist/
 
 # Coverage reports

@@ -61,7 +61,7 @@ func DefaultConfig() *Config {
 		},
 		Paths: PathsConfig{
 			AssetsFolder:     `C:\ProgramData\MultiTaction\canvus\assets`,
-			BackupRootFolder: "",
+			BackupRootFolder: `C:\ProgramData\MultiTaction\canvus\backups`,
 			OutputFolder:     "./output",
 		},
 		Logging: LoggingConfig{
@@ -125,37 +125,42 @@ func LoadConfig(configFile string) (*Config, error) {
 // preserveDefaults ensures that default values are preserved when config fields are empty
 func (c *Config) preserveDefaults() {
 	defaults := DefaultConfig()
-	
+
 	// Preserve default assets folder if empty
 	if c.Paths.AssetsFolder == "" {
 		c.Paths.AssetsFolder = defaults.Paths.AssetsFolder
+	}
+	
+	// Preserve default backup root folder if empty
+	if c.Paths.BackupRootFolder == "" {
+		c.Paths.BackupRootFolder = defaults.Paths.BackupRootFolder
 	}
 	
 	// Preserve default output folder if empty
 	if c.Paths.OutputFolder == "" {
 		c.Paths.OutputFolder = defaults.Paths.OutputFolder
 	}
-	
+
 	// Preserve default Canvus Server URL if empty
 	if c.CanvusServer.URL == "" {
 		c.CanvusServer.URL = defaults.CanvusServer.URL
 	}
-	
+
 	// Preserve default timeout if zero
 	if c.CanvusServer.Timeout == 0 {
 		c.CanvusServer.Timeout = defaults.CanvusServer.Timeout
 	}
-	
+
 	// Preserve default logging level if empty
 	if c.Logging.Level == "" {
 		c.Logging.Level = defaults.Logging.Level
 	}
-	
+
 	// Preserve default log file if empty
 	if c.Logging.LogFile == "" {
 		c.Logging.LogFile = defaults.Logging.LogFile
 	}
-	
+
 	// Preserve default performance settings if zero
 	if c.Performance.MaxConcurrentAPI == 0 {
 		c.Performance.MaxConcurrentAPI = defaults.Performance.MaxConcurrentAPI

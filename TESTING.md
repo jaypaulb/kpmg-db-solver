@@ -75,7 +75,7 @@ kpmg-db-solver.exe discover
 
 ### Path Issues
 - Verify assets folder path exists (default: `C:\ProgramData\MultiTaction\canvus\assets`)
-- Check backup root folder path exists
+- Check backup root folder path exists (default: `C:\ProgramData\MultiTaction\canvus\backups`)
 - Ensure proper Windows path format (C:\\path\\to\\folder)
 
 ### API Issues

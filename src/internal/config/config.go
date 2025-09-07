@@ -58,7 +58,7 @@ func DefaultConfig() *Config {
 			Timeout:  30,
 		},
 		Paths: PathsConfig{
-			AssetsFolder:     "",
+			AssetsFolder:     `C:\ProgramData\MultiTaction\canvus\assets`,
 			BackupRootFolder: "",
 			OutputFolder:     "./output",
 		},

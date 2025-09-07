@@ -6,7 +6,7 @@
 2. **Create a config file** by copying `config-sample.yaml` to `config.yaml`
 3. **Update the configuration** with your actual values:
    - Canvus Server credentials
-   - Assets folder path
+   - Assets folder path (defaults to `C:\ProgramData\MultiTaction\canvus\assets`)
    - Backup root folder path
 
 ## Testing the Discovery Command
@@ -33,7 +33,7 @@ kpmg-db-solver.exe discover
 ✅ Loaded configuration from file
 🔍 Starting asset discovery...
 📡 Connecting to Canvus Server: https://localhost:443
-📁 Scanning assets folder: C:\path\to\assets
+📁 Scanning assets folder: C:\ProgramData\MultiTaction\canvus\assets
 🔐 Authenticating with Canvus Server...
 ✅ Authenticated successfully
 📊 Discovering assets from Canvus API...
@@ -72,7 +72,7 @@ kpmg-db-solver.exe discover
 - Ensure user has access to canvases
 
 ### Path Issues
-- Verify assets folder path exists
+- Verify assets folder path exists (default: `C:\ProgramData\MultiTaction\canvus\assets`)
 - Check backup root folder path exists
 - Ensure proper Windows path format (C:\\path\\to\\folder)
 

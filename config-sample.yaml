@@ -10,7 +10,7 @@ canvus_server:
 
 # File System Paths
 paths:
-  assets_folder: "C:\\path\\to\\canvus\\assets\\folder"
+  assets_folder: "C:\\ProgramData\\MultiTaction\\canvus\\assets"  # Default Canvus installation path
   backup_root_folder: "C:\\path\\to\\backup\\root\\folder"
   output_folder: "./output"
 

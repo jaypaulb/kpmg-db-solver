@@ -24,12 +24,21 @@ type AssetInfo struct {
 
 // DiscoveryResult represents the result of asset discovery
 type DiscoveryResult struct {
-	Assets    []AssetInfo `json:"assets"`
-	Canvases  []canvussdk.Canvas `json:"canvases"`
-	StartTime time.Time   `json:"start_time"`
-	EndTime   time.Time   `json:"end_time"`
-	Duration  time.Duration `json:"duration"`
-	Errors    []string    `json:"errors"`
+	Assets           []AssetInfo `json:"assets"`
+	Canvases         []canvussdk.Canvas `json:"canvases"`
+	StartTime        time.Time   `json:"start_time"`
+	EndTime          time.Time   `json:"end_time"`
+	Duration         time.Duration `json:"duration"`
+	Errors           []string    `json:"errors"`
+	ServerValidation *ServerValidationResult `json:"server_validation,omitempty"`
+}
+
+// ServerValidationResult represents the result of server-side asset validation
+type ServerValidationResult struct {
+	TotalAssets     int `json:"total_assets"`
+	ExistingAssets  int `json:"existing_assets"`
+	MissingAssets   int `json:"missing_assets"`
+	ValidationErrors []string `json:"validation_errors"`
 }
 
 // RateLimiter controls the rate of API requests
@@ -113,14 +122,10 @@ func DiscoverAllAssets(session *canvussdk.Session, requestsPerSecond int) (*Disc
 			
 			// Extract media assets from canvas background
 			backgroundAssets := extractBackgroundAssets(ctx, session, canvas)
-			
-			// Extract media assets from uploads folder
-			uploadsAssets := extractUploadsFolderAssets(ctx, session, canvas)
 
 			mu.Lock()
 			result.Assets = append(result.Assets, widgetAssets...)
 			result.Assets = append(result.Assets, backgroundAssets...)
-			result.Assets = append(result.Assets, uploadsAssets...)
 			mu.Unlock()
 		}(canvas)
 	}
@@ -129,6 +134,19 @@ func DiscoverAllAssets(session *canvussdk.Session, requestsPerSecond int) (*Disc
 
 	result.EndTime = time.Now()
 	result.Duration = result.EndTime.Sub(result.StartTime)
+
+	// Validate assets on the server
+	logger := logging.GetLogger()
+	logger.Info("🔍 Validating assets on Canvus Server...")
+	validationResult, err := validateAssetsOnServer(ctx, session, result.Assets)
+	if err != nil {
+		logger.Warn("Asset validation failed: %v", err)
+		result.Errors = append(result.Errors, fmt.Sprintf("Asset validation failed: %v", err))
+	} else {
+		result.ServerValidation = validationResult
+		logger.Info("✅ Server validation complete: %d/%d assets exist on server", 
+			validationResult.ExistingAssets, validationResult.TotalAssets)
+	}
 
 	return result, nil
 }
@@ -208,39 +226,54 @@ func extractBackgroundAssets(ctx context.Context, session *canvussdk.Session, ca
 	return assets
 }
 
-// extractUploadsFolderAssets attempts to extract media assets from the uploads folder
-func extractUploadsFolderAssets(ctx context.Context, session *canvussdk.Session, canvas canvussdk.Canvas) []AssetInfo {
-	var assets []AssetInfo
+// validateAssetsOnServer validates that assets exist on the Canvus server using GET /assets/{hash}
+func validateAssetsOnServer(ctx context.Context, session *canvussdk.Session, assets []AssetInfo) (*ServerValidationResult, error) {
 	logger := logging.GetLogger()
-
-	// Try to get uploads folder contents
-	logger.Verbose("Getting uploads folder contents for canvas '%s' (ID: %s)", canvas.Name, canvas.ID)
-	uploadsWidgets, err := session.ListUploadsFolder(ctx, canvas.ID)
-	if err != nil {
-		logger.Verbose("Failed to get uploads folder for canvas '%s' (ID: %s): %v", canvas.Name, canvas.ID, err)
-		return assets // Return empty slice if we can't get uploads folder
+	
+	result := &ServerValidationResult{
+		TotalAssets:     len(assets),
+		ExistingAssets:  0,
+		MissingAssets:   0,
+		ValidationErrors: make([]string, 0),
 	}
 
-	logger.Verbose("Found %d items in uploads folder for canvas '%s' (ID: %s)", len(uploadsWidgets), canvas.Name, canvas.ID)
+	if len(assets) == 0 {
+		return result, nil
+	}
 
-	// Process each uploads folder widget
-	mediaCount := 0
-	for _, widget := range uploadsWidgets {
-		logger.Verbose("Processing uploads folder widget: ID=%s, Type=%s", widget.ID, widget.WidgetType)
-		
-		// Get the specific widget details to check for hash field
-		asset := extractAssetFromWidget(ctx, session, canvas, widget)
-		if asset != nil {
-			// Mark this as an uploads folder asset
-			asset.WidgetName = "Uploads: " + asset.WidgetName
-			assets = append(assets, *asset)
-			mediaCount++
-			logger.Verbose("Found uploads folder asset: %s (%s) - Hash: %s", asset.WidgetName, asset.WidgetType, asset.Hash)
+	// Get unique assets by hash to avoid duplicate validation
+	uniqueAssets := make(map[string]AssetInfo)
+	for _, asset := range assets {
+		if asset.Hash != "" {
+			uniqueAssets[asset.Hash] = asset
 		}
 	}
 
-	logger.Verbose("Extracted %d media assets from uploads folder for canvas '%s' (ID: %s)", mediaCount, canvas.Name, canvas.ID)
-	return assets
+	logger.Verbose("Validating %d unique assets on server", len(uniqueAssets))
+
+	// Validate each unique asset
+	for hash, asset := range uniqueAssets {
+		logger.Verbose("Validating asset hash: %s (%s)", hash, asset.WidgetType)
+		
+		// Try to get the asset from the server
+		// We need a canvas ID for the request, so we'll use the first canvas that has this asset
+		_, err := session.GetAssetByHash(ctx, asset.CanvasID, hash)
+		if err != nil {
+			// Asset doesn't exist on server
+			result.MissingAssets++
+			logger.Verbose("❌ Asset missing on server: %s (%s) - Hash: %s", 
+				asset.WidgetName, asset.WidgetType, hash)
+			result.ValidationErrors = append(result.ValidationErrors, 
+				fmt.Sprintf("Missing: %s (%s) - Hash: %s", asset.WidgetName, asset.WidgetType, hash))
+		} else {
+			// Asset exists on server
+			result.ExistingAssets++
+			logger.Verbose("✅ Asset exists on server: %s (%s) - Hash: %s", 
+				asset.WidgetName, asset.WidgetType, hash)
+		}
+	}
+
+	return result, nil
 }
 
 // extractAssetFromWidget extracts asset information from a widget if it has a hash field

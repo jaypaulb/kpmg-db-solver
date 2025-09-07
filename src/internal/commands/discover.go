@@ -217,7 +217,17 @@ func (cmd *DiscoverCommand) printSummary(discoveryResult *canvus.DiscoveryResult
 	fmt.Printf("🔗 Unique Assets: %d\n", len(discoveryResult.GetUniqueAssets()))
 	fmt.Printf("💾 Files in Assets Folder: %d\n", len(scanResult.Files))
 	fmt.Printf("💽 Total Assets Size: %.2f MB\n", float64(scanResult.TotalSize)/(1024*1024))
-	fmt.Printf("❌ Missing Assets: %d\n", len(missingAssets))
+	fmt.Printf("❌ Missing Assets (Filesystem): %d\n", len(missingAssets))
+
+	// Show server validation results if available
+	if discoveryResult.ServerValidation != nil {
+		fmt.Printf("🔍 Server Validation: %d/%d assets exist on server\n", 
+			discoveryResult.ServerValidation.ExistingAssets, 
+			discoveryResult.ServerValidation.TotalAssets)
+		if discoveryResult.ServerValidation.MissingAssets > 0 {
+			fmt.Printf("❌ Missing Assets (Server): %d\n", discoveryResult.ServerValidation.MissingAssets)
+		}
+	}
 
 	if len(discoveryResult.Errors) > 0 {
 		fmt.Printf("⚠️  Errors Encountered: %d\n", len(discoveryResult.Errors))

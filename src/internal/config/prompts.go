@@ -34,8 +34,8 @@ func (p *InteractivePrompts) PromptForConfig() (*Config, error) {
 	// Canvus Server configuration
 	fmt.Println("📡 Canvus Server Configuration")
 	fmt.Println("-------------------------------")
+	fmt.Println("ℹ️  Server URL: http://localhost:8080 (local access only)")
 	
-	config.CanvusServer.URL = p.promptString("Canvus Server URL", "", true)
 	config.CanvusServer.Username = p.promptString("Username", "", true)
 	config.CanvusServer.Password = p.promptPassword("Password")
 	
@@ -47,7 +47,7 @@ func (p *InteractivePrompts) PromptForConfig() (*Config, error) {
 	// Paths configuration
 	fmt.Println("📁 Paths Configuration")
 	fmt.Println("----------------------")
-	
+
 	config.Paths.AssetsFolder = p.promptPath("Assets Folder Path", "", true)
 	config.Paths.BackupRootFolder = p.promptPath("Backup Root Folder Path", "", true)
 	config.Paths.OutputFolder = p.promptPath("Output Folder Path", "./output", false)
@@ -57,17 +57,17 @@ func (p *InteractivePrompts) PromptForConfig() (*Config, error) {
 	// Logging configuration
 	fmt.Println("📝 Logging Configuration")
 	fmt.Println("------------------------")
-	
+
 	verbose := p.promptBool("Enable verbose logging", false)
 	config.Logging.Verbose = verbose
-	
+
 	if verbose {
 		config.Logging.Level = "debug"
 	}
-	
+
 	logToFile := p.promptBool("Log to file", false)
 	config.Logging.LogToFile = logToFile
-	
+
 	if logToFile {
 		config.Logging.LogFile = p.promptString("Log file path", "kpmg-db-solver.log", false)
 	}
@@ -77,10 +77,10 @@ func (p *InteractivePrompts) PromptForConfig() (*Config, error) {
 	// Performance configuration
 	fmt.Println("⚡ Performance Configuration")
 	fmt.Println("-----------------------------")
-	
+
 	maxAPI := p.promptInt("Max concurrent API calls", 10)
 	config.Performance.MaxConcurrentAPI = maxAPI
-	
+
 	maxFiles := p.promptInt("Max concurrent file operations", 20)
 	config.Performance.MaxConcurrentFiles = maxFiles
 
@@ -114,7 +114,7 @@ func (p *InteractivePrompts) promptString(prompt, defaultValue string, required 
 		}
 
 		input = strings.TrimSpace(input)
-		
+
 		if input == "" {
 			if defaultValue != "" {
 				return defaultValue
@@ -134,7 +134,7 @@ func (p *InteractivePrompts) promptString(prompt, defaultValue string, required 
 func (p *InteractivePrompts) promptPassword(prompt string) string {
 	for {
 		fmt.Printf("%s: ", prompt)
-		
+
 		// Check if stdin is a terminal
 		if term.IsTerminal(int(syscall.Stdin)) {
 			// Interactive mode - read password without echoing
@@ -144,12 +144,12 @@ func (p *InteractivePrompts) promptPassword(prompt string) string {
 				continue
 			}
 			fmt.Println() // New line after hidden input
-			
+
 			if len(password) == 0 {
 				fmt.Println("❌ Password is required. Please enter a value.")
 				continue
 			}
-			
+
 			return string(password)
 		} else {
 			// Non-interactive mode - read from stdin normally
@@ -158,13 +158,13 @@ func (p *InteractivePrompts) promptPassword(prompt string) string {
 				fmt.Printf("Error reading password: %v\n", err)
 				continue
 			}
-			
+
 			password = strings.TrimSpace(password)
 			if password == "" {
 				fmt.Println("❌ Password is required. Please enter a value.")
 				continue
 			}
-			
+
 			return password
 		}
 	}
@@ -174,7 +174,7 @@ func (p *InteractivePrompts) promptPassword(prompt string) string {
 func (p *InteractivePrompts) promptInt(prompt string, defaultValue int) int {
 	for {
 		input := p.promptString(prompt, fmt.Sprintf("%d", defaultValue), false)
-		
+
 		if input == "" {
 			return defaultValue
 		}
@@ -203,7 +203,7 @@ func (p *InteractivePrompts) promptBool(prompt string, defaultValue bool) bool {
 
 	for {
 		input := p.promptString(prompt+" (y/n)", defaultStr, false)
-		
+
 		if input == "" {
 			return defaultValue
 		}
@@ -225,7 +225,7 @@ func (p *InteractivePrompts) promptBool(prompt string, defaultValue bool) bool {
 func (p *InteractivePrompts) promptPath(prompt, defaultValue string, mustExist bool) string {
 	for {
 		path := p.promptString(prompt, defaultValue, true)
-		
+
 		// Expand tilde to home directory
 		if strings.HasPrefix(path, "~") {
 			home, err := os.UserHomeDir()
@@ -258,13 +258,13 @@ func (p *InteractivePrompts) promptPath(prompt, defaultValue string, mustExist b
 // PromptForSaveConfig asks if the user wants to save the configuration
 func (p *InteractivePrompts) PromptForSaveConfig(config *Config) error {
 	save := p.promptBool("Save configuration to file", true)
-	
+
 	if !save {
 		return nil
 	}
 
 	configFile := p.promptString("Configuration file path", "config.yaml", false)
-	
+
 	if err := config.SaveConfig(configFile); err != nil {
 		return fmt.Errorf("failed to save configuration: %w", err)
 	}

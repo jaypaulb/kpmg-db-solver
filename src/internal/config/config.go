@@ -19,7 +19,7 @@ type Config struct {
 
 // CanvusServerConfig contains Canvus Server connection settings
 type CanvusServerConfig struct {
-	URL      string `mapstructure:"url"`
+	URL      string `mapstructure:"url"`      // Always localhost for local file access
 	Username string `mapstructure:"username"`
 	Password string `mapstructure:"password"`
 	Timeout  int    `mapstructure:"timeout"` // seconds
@@ -52,7 +52,7 @@ type PerformanceConfig struct {
 func DefaultConfig() *Config {
 	return &Config{
 		CanvusServer: CanvusServerConfig{
-			URL:      "",
+			URL:      "http://localhost:8080", // Default localhost for local file access
 			Username: "",
 			Password: "",
 			Timeout:  30,
@@ -120,11 +120,9 @@ func LoadConfig(configFile string) (*Config, error) {
 // ValidateConfig validates the configuration
 func (c *Config) Validate() error {
 	// Validate Canvus Server settings
+	// URL is always localhost for local file access, so we just ensure it's set
 	if c.CanvusServer.URL == "" {
-		return fmt.Errorf("canvus server URL is required")
-	}
-	if !strings.HasPrefix(c.CanvusServer.URL, "http") {
-		return fmt.Errorf("canvus server URL must start with http:// or https://")
+		c.CanvusServer.URL = "http://localhost:8080" // Default to localhost
 	}
 	if c.CanvusServer.Username == "" {
 		return fmt.Errorf("canvus server username is required")
@@ -157,7 +155,7 @@ func (c *Config) Validate() error {
 	// Validate logging level
 	validLevels := []string{"debug", "info", "warn", "error"}
 	if !contains(validLevels, c.Logging.Level) {
-		return fmt.Errorf("invalid logging level: %s (must be one of: %s)", 
+		return fmt.Errorf("invalid logging level: %s (must be one of: %s)",
 			c.Logging.Level, strings.Join(validLevels, ", "))
 	}
 

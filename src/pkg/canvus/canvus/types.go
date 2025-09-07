@@ -156,16 +156,34 @@ type Image struct {
 
 // PDF represents a PDF asset in the Canvus system.
 type PDF struct {
-	ID   string
-	Name string
-	// ... other fields
+	ID               string  `json:"id"`
+	Hash             string  `json:"hash"`
+	Title            string  `json:"title"`
+	OriginalFilename string  `json:"original_filename"`
+	ParentID         string  `json:"parent_id"`
+	Pinned           bool    `json:"pinned"`
+	Scale            float64 `json:"scale"`
+	Size             *Size   `json:"size,omitempty"`
+	Location         *Point  `json:"location,omitempty"`
+	State            string  `json:"state"`
+	WidgetType       string  `json:"widget_type"`
+	Depth            float64 `json:"depth"`
 }
 
 // Video represents a video asset in the Canvus system.
 type Video struct {
-	ID   string
-	Name string
-	// ... other fields
+	ID               string  `json:"id"`
+	Hash             string  `json:"hash"`
+	Title            string  `json:"title"`
+	OriginalFilename string  `json:"original_filename"`
+	ParentID         string  `json:"parent_id"`
+	Pinned           bool    `json:"pinned"`
+	Scale            float64 `json:"scale"`
+	Size             *Size   `json:"size,omitempty"`
+	Location         *Point  `json:"location,omitempty"`
+	State            string  `json:"state"`
+	WidgetType       string  `json:"widget_type"`
+	Depth            float64 `json:"depth"`
 }
 
 type Widget struct {

@@ -76,7 +76,7 @@ func (s *Searcher) SearchForAssets(missingHashes []string) (*SearchResult, error
 		s.logger.Error("Error searching backup folder %s: %v", s.backupRootFolder, err)
 		return result, err
 	}
-	
+
 	result.TotalSearched = 1 // We searched one root folder
 
 	// Identify hashes that were not found

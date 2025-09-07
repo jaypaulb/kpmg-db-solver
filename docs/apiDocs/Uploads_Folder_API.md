@@ -13,7 +13,7 @@ List all uploaded files in the uploads folder.
 [
   {
     "id": "string",
-    "filename": "string", 
+    "filename": "string",
     "hash": "string",
     "size": "number",
     "uploaded_at": "string",
@@ -30,7 +30,7 @@ Get details of a specific uploaded file.
 {
   "id": "string",
   "filename": "string",
-  "hash": "string", 
+  "hash": "string",
   "size": "number",
   "uploaded_at": "string",
   "content_type": "string",

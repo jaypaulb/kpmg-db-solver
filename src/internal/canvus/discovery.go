@@ -113,10 +113,14 @@ func DiscoverAllAssets(session *canvussdk.Session, requestsPerSecond int) (*Disc
 			
 			// Extract media assets from canvas background
 			backgroundAssets := extractBackgroundAssets(ctx, session, canvas)
+			
+			// Extract media assets from uploads folder
+			uploadsAssets := extractUploadsFolderAssets(ctx, session, canvas)
 
 			mu.Lock()
 			result.Assets = append(result.Assets, widgetAssets...)
 			result.Assets = append(result.Assets, backgroundAssets...)
+			result.Assets = append(result.Assets, uploadsAssets...)
 			mu.Unlock()
 		}(canvas)
 	}
@@ -184,7 +188,7 @@ func extractBackgroundAssets(ctx context.Context, session *canvussdk.Session, ca
 	// Check if background has an image with a hash
 	if background.Image != nil && background.Image.Hash != "" {
 		logger.Verbose("Found background image with hash: %s for canvas '%s'", background.Image.Hash, canvas.Name)
-		
+
 		asset := AssetInfo{
 			Hash:             background.Image.Hash,
 			WidgetType:       "CanvasBackground",
@@ -194,13 +198,48 @@ func extractBackgroundAssets(ctx context.Context, session *canvussdk.Session, ca
 			WidgetID:         "background", // Special ID for background
 			WidgetName:       "Canvas Background",
 		}
-		
+
 		assets = append(assets, asset)
 		logger.Verbose("Found background asset: Canvas Background (CanvasBackground) - Hash: %s", background.Image.Hash)
 	} else {
 		logger.Verbose("No background image found for canvas '%s' (ID: %s)", canvas.Name, canvas.ID)
 	}
 
+	return assets
+}
+
+// extractUploadsFolderAssets attempts to extract media assets from the uploads folder
+func extractUploadsFolderAssets(ctx context.Context, session *canvussdk.Session, canvas canvussdk.Canvas) []AssetInfo {
+	var assets []AssetInfo
+	logger := logging.GetLogger()
+
+	// Try to get uploads folder contents
+	logger.Verbose("Getting uploads folder contents for canvas '%s' (ID: %s)", canvas.Name, canvas.ID)
+	uploadsWidgets, err := session.ListUploadsFolder(ctx, canvas.ID)
+	if err != nil {
+		logger.Verbose("Failed to get uploads folder for canvas '%s' (ID: %s): %v", canvas.Name, canvas.ID, err)
+		return assets // Return empty slice if we can't get uploads folder
+	}
+
+	logger.Verbose("Found %d items in uploads folder for canvas '%s' (ID: %s)", len(uploadsWidgets), canvas.Name, canvas.ID)
+
+	// Process each uploads folder widget
+	mediaCount := 0
+	for _, widget := range uploadsWidgets {
+		logger.Verbose("Processing uploads folder widget: ID=%s, Type=%s", widget.ID, widget.WidgetType)
+		
+		// Get the specific widget details to check for hash field
+		asset := extractAssetFromWidget(ctx, session, canvas, widget)
+		if asset != nil {
+			// Mark this as an uploads folder asset
+			asset.WidgetName = "Uploads: " + asset.WidgetName
+			assets = append(assets, *asset)
+			mediaCount++
+			logger.Verbose("Found uploads folder asset: %s (%s) - Hash: %s", asset.WidgetName, asset.WidgetType, asset.Hash)
+		}
+	}
+
+	logger.Verbose("Extracted %d media assets from uploads folder for canvas '%s' (ID: %s)", mediaCount, canvas.Name, canvas.ID)
 	return assets
 }
 

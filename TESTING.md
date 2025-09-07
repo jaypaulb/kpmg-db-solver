@@ -8,6 +8,7 @@
    - Canvus Server credentials
    - Assets folder path (defaults to `C:\ProgramData\MultiTaction\canvus\assets`)
    - Backup root folder path
+   - TLS settings (`insecure_tls: true` for self-signed certificates)
 
 ## Testing the Discovery Command
 
@@ -70,6 +71,7 @@ kpmg-db-solver.exe discover
 - Verify Canvus Server is running on https://localhost:443
 - Check username/password credentials
 - Ensure user has access to canvases
+- For self-signed certificates, set `insecure_tls: true` in config
 
 ### Path Issues
 - Verify assets folder path exists (default: `C:\ProgramData\MultiTaction\canvus\assets`)

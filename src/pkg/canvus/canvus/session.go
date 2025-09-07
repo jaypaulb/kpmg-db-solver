@@ -4,6 +4,7 @@ package canvus
 import (
 	"bytes"
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -60,6 +61,22 @@ func WithAPIKey(apiKey string) SessionOption {
 func WithToken(token string) SessionOption {
 	return func(s *Session) {
 		s.authenticator = &TokenAuthenticator{Token: token}
+	}
+}
+
+// WithInsecureTLS configures the session to skip TLS certificate verification.
+// This is useful for self-signed certificates in development environments.
+func WithInsecureTLS() SessionOption {
+	return func(s *Session) {
+		transport := &http.Transport{
+			TLSClientConfig: &tls.Config{
+				InsecureSkipVerify: true,
+			},
+		}
+		s.HTTPClient = &http.Client{
+			Transport: transport,
+			Timeout:   30 * time.Second,
+		}
 	}
 }
 

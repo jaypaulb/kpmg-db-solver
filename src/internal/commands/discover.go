@@ -33,7 +33,12 @@ func (cmd *DiscoverCommand) Execute() error {
 
 	// Create Canvus session using existing SDK
 	ctx := context.Background()
-	session := canvussdk.NewSession(cmd.config.GetCanvusAPIURL())
+	var session *canvussdk.Session
+	if cmd.config.CanvusServer.InsecureTLS {
+		session = canvussdk.NewSession(cmd.config.GetCanvusAPIURL(), canvussdk.WithInsecureTLS())
+	} else {
+		session = canvussdk.NewSession(cmd.config.GetCanvusAPIURL())
+	}
 
 	// Authenticate using existing SDK
 	fmt.Println("🔐 Authenticating with Canvus Server...")

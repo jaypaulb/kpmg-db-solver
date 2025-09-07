@@ -7,6 +7,7 @@ canvus_server:
   username: "your_username_here"
   password: "your_password_here"
   timeout: 30  # seconds
+  insecure_tls: true  # Set to false for production with valid certificates
 
 # File System Paths
 paths:

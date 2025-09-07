@@ -19,10 +19,11 @@ type Config struct {
 
 // CanvusServerConfig contains Canvus Server connection settings
 type CanvusServerConfig struct {
-	URL      string `mapstructure:"url"`      // Always localhost for local file access
-	Username string `mapstructure:"username"`
-	Password string `mapstructure:"password"`
-	Timeout  int    `mapstructure:"timeout"` // seconds
+	URL              string `mapstructure:"url"`                // Always localhost for local file access
+	Username         string `mapstructure:"username"`
+	Password         string `mapstructure:"password"`
+	Timeout          int    `mapstructure:"timeout"`            // seconds
+	InsecureTLS      bool   `mapstructure:"insecure_tls"`       // Skip TLS certificate verification
 }
 
 // PathsConfig contains file system paths
@@ -52,10 +53,11 @@ type PerformanceConfig struct {
 func DefaultConfig() *Config {
 	return &Config{
 		CanvusServer: CanvusServerConfig{
-			URL:      "https://localhost:443", // Default localhost for local file access
-			Username: "",
-			Password: "",
-			Timeout:  30,
+			URL:         "https://localhost:443", // Default localhost for local file access
+			Username:    "",
+			Password:    "",
+			Timeout:     30,
+			InsecureTLS: true, // Default to true for self-signed certificates
 		},
 		Paths: PathsConfig{
 			AssetsFolder:     `C:\ProgramData\MultiTaction\canvus\assets`,

@@ -9,7 +9,7 @@ import (
 // Requires 'canvas-id' and 'Private-Token' headers.
 func (s *Session) GetMipmapInfo(ctx context.Context, canvasID, publicHashHex string, page *int) (*MipmapInfo, error) {
 	var info MipmapInfo
-	path := fmt.Sprintf("api/v1/mipmaps/%s", publicHashHex)
+	path := fmt.Sprintf("mipmaps/%s", publicHashHex)
 	params := map[string]interface{}{}
 	if page != nil {
 		params["page"] = *page
@@ -24,7 +24,7 @@ func (s *Session) GetMipmapInfo(ctx context.Context, canvasID, publicHashHex str
 // GetMipmapLevel retrieves a specific mipmap level image (WebP format).
 // Returns binary data. Requires 'canvas-id' and 'Private-Token' headers.
 func (s *Session) GetMipmapLevel(ctx context.Context, canvasID, publicHashHex string, level int, page *int) ([]byte, error) {
-	path := fmt.Sprintf("api/v1/mipmaps/%s/%d", publicHashHex, level)
+	path := fmt.Sprintf("mipmaps/%s/%d", publicHashHex, level)
 	params := map[string]interface{}{}
 	if page != nil {
 		params["page"] = *page
@@ -40,7 +40,7 @@ func (s *Session) GetMipmapLevel(ctx context.Context, canvasID, publicHashHex st
 // GetAssetByHash retrieves an asset file by its hash.
 // Returns binary data. Requires 'canvas-id' and 'Private-Token' headers.
 func (s *Session) GetAssetByHash(ctx context.Context, canvasID, publicHashHex string) ([]byte, error) {
-	path := fmt.Sprintf("api/v1/assets/%s", publicHashHex)
+	path := fmt.Sprintf("assets/%s", publicHashHex)
 	var data []byte
 	err := s.doRequestWithHeaders(ctx, "GET", path, nil, &data, nil, map[string]string{"canvas-id": canvasID}, true)
 	if err != nil {

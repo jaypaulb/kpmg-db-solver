@@ -3,7 +3,6 @@ package commands
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -116,50 +115,16 @@ func (cmd *RunCommand) Execute(cobraCmd *cobra.Command, args []string) error {
 	// Sort backup files by modification time (newest first)
 	searcher.SortBackupFiles(backupSearchResult)
 
-	// Step 4: Asset Restoration (if found)
+	// Step 4: Asset Discovery Summary (restoration disabled in non-admin version)
 	if len(backupSearchResult.FoundFiles) > 0 {
 		logger.Info("")
-		logger.Info("💾 Step 4: Restoring found assets...")
+		logger.Info("💾 Step 4: Asset Discovery Summary...")
 		logger.Info("💾 Found %d missing assets in backup folder", len(backupSearchResult.FoundFiles))
-
-		// Check if we should auto-restore or prompt
-		autoRestore := cmd.shouldAutoRestore()
-
-		if autoRestore {
-			logger.Info("🔄 Auto-restoring assets (no user prompt)...")
-		} else {
-			logger.Info("🔄 Would you like to restore these assets? (y/N): ")
-			var response string
-			fmt.Scanln(&response)
-			autoRestore = strings.ToLower(response) == "y" || strings.ToLower(response) == "yes"
-		}
-
-		if autoRestore {
-			logger.Info("🔄 Restoring assets...")
-			restorer := backup.NewRestorer(cmd.config.Paths.AssetsFolder)
-			restoreResult, err := restorer.RestoreAssets(backupSearchResult)
-			if err != nil {
-				logger.Error("Asset restoration failed: %v", err)
-				return fmt.Errorf("asset restoration failed: %w", err)
-			}
-
-			logger.Info("✅ Restoration completed:")
-			logger.Info("   ✅ Files restored: %d", len(restoreResult.RestoredFiles))
-			logger.Info("   ❌ Files failed: %d", len(restoreResult.FailedFiles))
-			logger.Info("   📊 Total bytes: %d", restoreResult.TotalBytes)
-
-			if len(restoreResult.Errors) > 0 {
-				logger.Warn("Restoration errors:")
-				for _, errMsg := range restoreResult.Errors {
-					logger.Warn("   %s", errMsg)
-				}
-			}
-		} else {
-			logger.Info("⏭️ Skipping asset restoration")
-		}
+		logger.Info("📋 Asset locations will be included in the detailed report")
+		logger.Info("⚠️  Note: Asset restoration requires administrator privileges and is disabled in this version")
 	} else {
 		logger.Info("")
-		logger.Info("❌ Step 4: No backup assets found - skipping restoration")
+		logger.Info("❌ Step 4: No backup assets found")
 	}
 
 	// Step 5: Report Generation

@@ -9,11 +9,11 @@ canvus_server:
   timeout: 30  # seconds
   insecure_tls: true  # Set to false for production with valid certificates
 
-# File System Paths
+# File System Paths (Non-Admin Version - Read-Only Access)
 paths:
-  assets_folder: "C:\\ProgramData\\MultiTaction\\canvus\\assets"  # Default Canvus installation path
-  backup_root_folder: "C:\\ProgramData\\MultiTaction\\canvus\\backups"  # Default Canvus backup path
-  output_folder: "./output"
+  assets_folder: "C:\\ProgramData\\MultiTaction\\canvus\\assets"  # Read-only access for discovery
+  backup_root_folder: "C:\\ProgramData\\MultiTaction\\canvus\\backups"  # Read-only access for discovery
+  output_folder: "./reports"  # User-accessible output folder
 
 # Logging Configuration
 logging:

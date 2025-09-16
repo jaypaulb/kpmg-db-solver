@@ -60,9 +60,9 @@ func DefaultConfig() *Config {
 			InsecureTLS: true, // Default to true for self-signed certificates
 		},
 		Paths: PathsConfig{
-			AssetsFolder:     `C:\ProgramData\MultiTaction\canvus\assets`,
-			BackupRootFolder: `C:\ProgramData\MultiTaction\canvus\backups`,
-			OutputFolder:     "./output",
+			AssetsFolder:     `C:\ProgramData\MultiTaction\canvus\assets`,     // Read-only access for discovery
+			BackupRootFolder: `C:\ProgramData\MultiTaction\canvus\backups`,   // Read-only access for discovery
+			OutputFolder:     "./reports",  // User-accessible output folder
 		},
 		Logging: LoggingConfig{
 			Level:      "info",
@@ -198,12 +198,12 @@ func (c *Config) Validate() error {
 		return fmt.Errorf("backup root folder path is required")
 	}
 
-	// Validate that paths exist
+	// Validate that paths exist (read-only access required)
 	if !pathExists(c.Paths.AssetsFolder) {
-		return fmt.Errorf("assets folder does not exist: %s", c.Paths.AssetsFolder)
+		return fmt.Errorf("assets folder does not exist or is not accessible: %s", c.Paths.AssetsFolder)
 	}
 	if !pathExists(c.Paths.BackupRootFolder) {
-		return fmt.Errorf("backup root folder does not exist: %s", c.Paths.BackupRootFolder)
+		return fmt.Errorf("backup root folder does not exist or is not accessible: %s", c.Paths.BackupRootFolder)
 	}
 
 	// Create output folder if it doesn't exist

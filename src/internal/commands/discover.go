@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -105,36 +106,11 @@ func (cmd *DiscoverCommand) Execute() error {
 		// Sort backup files by modification time (newest first)
 		searcher.SortBackupFiles(backupSearchResult)
 
-		// Offer to restore found assets
+		// Report found assets (restoration disabled in non-admin version)
 		if len(backupSearchResult.FoundFiles) > 0 {
 			logger.Info("💾 Found %d missing assets in backup folder", len(backupSearchResult.FoundFiles))
-			logger.Info("🔄 Would you like to restore these assets? (y/N): ")
-
-			var response string
-			fmt.Scanln(&response)
-			if strings.ToLower(response) == "y" || strings.ToLower(response) == "yes" {
-				logger.Info("🔄 Restoring assets...")
-				restorer := backup.NewRestorer(cmd.config.Paths.AssetsFolder)
-				restoreResult, err := restorer.RestoreAssets(backupSearchResult)
-				if err != nil {
-					logger.Error("Asset restoration failed: %v", err)
-					return fmt.Errorf("asset restoration failed: %w", err)
-				}
-
-				logger.Info("✅ Restoration completed:")
-				logger.Info("   ✅ Files restored: %d", len(restoreResult.RestoredFiles))
-				logger.Info("   ❌ Files failed: %d", len(restoreResult.FailedFiles))
-				logger.Info("   📊 Total bytes: %d", restoreResult.TotalBytes)
-
-				if len(restoreResult.Errors) > 0 {
-					logger.Warn("Restoration errors:")
-					for _, errMsg := range restoreResult.Errors {
-						logger.Warn("   %s", errMsg)
-					}
-				}
-			} else {
-				logger.Info("⏭️ Skipping asset restoration")
-			}
+			logger.Info("📋 Asset locations will be included in the detailed report")
+			logger.Info("⚠️  Note: Asset restoration requires administrator privileges and is disabled in this version")
 		}
 	}
 
@@ -189,7 +165,7 @@ func (cmd *DiscoverCommand) generateReports(discoveryResult *canvus.DiscoveryRes
 
 // generateDetailedReport generates a detailed text report
 func (cmd *DiscoverCommand) generateDetailedReport(missingAssets []canvus.AssetInfo, backupSearchResult *backup.SearchResult) error {
-	reportPath := "missing_assets_report.txt"
+	reportPath := filepath.Join(cmd.config.Paths.OutputFolder, "missing_assets_report.txt")
 
 	// Group assets by canvas
 	canvasMap := make(map[string][]canvus.AssetInfo)
@@ -198,9 +174,16 @@ func (cmd *DiscoverCommand) generateDetailedReport(missingAssets []canvus.AssetI
 	}
 
 	// Generate report content
-	content := fmt.Sprintf("KPMG DB Solver - Missing Assets Report\n")
+	content := fmt.Sprintf("KPMG DB Solver - Missing Assets Report (Non-Admin Version)\n")
 	content += fmt.Sprintf("Generated: %s\n", time.Now().Format("2006-01-02 15:04:05"))
-	content += fmt.Sprintf("Total Missing Assets: %d\n\n", len(missingAssets))
+	content += fmt.Sprintf("Total Missing Assets: %d\n", len(missingAssets))
+	
+	// Add backup summary
+	if backupSearchResult != nil {
+		content += fmt.Sprintf("Assets Found in Backup: %d\n", len(backupSearchResult.FoundFiles))
+		content += fmt.Sprintf("Assets Still Missing: %d\n", len(backupSearchResult.MissingHashes))
+	}
+	content += fmt.Sprintf("\nNote: This is a read-only version. Asset restoration requires administrator privileges.\n\n")
 
 	for canvasName, assets := range canvasMap {
 		content += fmt.Sprintf("Canvas: %s (ID: %s)\n", canvasName, assets[0].CanvasID)
@@ -211,16 +194,27 @@ func (cmd *DiscoverCommand) generateDetailedReport(missingAssets []canvus.AssetI
 				content += fmt.Sprintf("    Original Filename: %s\n", asset.OriginalFilename)
 			}
 
-			// Add backup status
+			// Add backup status with enhanced information
 			if backupSearchResult != nil {
 				if backupFiles, found := backupSearchResult.FoundFiles[asset.Hash]; found && len(backupFiles) > 0 {
 					bestBackup := backupFiles[0] // Newest file
 					content += fmt.Sprintf("    Backup Status: ✅ Found in backup\n")
 					content += fmt.Sprintf("    Backup Path: %s\n", bestBackup.Path)
-					content += fmt.Sprintf("    Backup Size: %d bytes\n", bestBackup.Size)
+					content += fmt.Sprintf("    Backup Size: %d bytes (%.2f MB)\n", bestBackup.Size, float64(bestBackup.Size)/(1024*1024))
 					content += fmt.Sprintf("    Backup Modified: %s\n", bestBackup.ModifiedTime.Format("2006-01-02 15:04:05"))
+					content += fmt.Sprintf("    Backup Count: %d versions found\n", len(backupFiles))
+					if len(backupFiles) > 1 {
+						content += fmt.Sprintf("    All Backup Locations:\n")
+						for i, backupFile := range backupFiles {
+							content += fmt.Sprintf("      %d. %s (Modified: %s, Size: %d bytes)\n", 
+								i+1, backupFile.Path, 
+								backupFile.ModifiedTime.Format("2006-01-02 15:04:05"), 
+								backupFile.Size)
+						}
+					}
 				} else {
 					content += fmt.Sprintf("    Backup Status: ❌ Not found in any backup\n")
+					content += fmt.Sprintf("    Action Required: Manual investigation needed\n")
 				}
 			}
 			content += "\n"
@@ -239,16 +233,18 @@ func (cmd *DiscoverCommand) generateDetailedReport(missingAssets []canvus.AssetI
 
 // generateCSVReport generates a CSV report
 func (cmd *DiscoverCommand) generateCSVReport(missingAssets []canvus.AssetInfo, backupSearchResult *backup.SearchResult) error {
-	reportPath := "missing_assets.csv"
+	reportPath := filepath.Join(cmd.config.Paths.OutputFolder, "missing_assets.csv")
 
-	// Generate CSV content
-	content := "Hash,WidgetType,OriginalFilename,CanvasID,CanvasName,WidgetID,WidgetName,BackupStatus,BackupPath,BackupSize,BackupModified\n"
+	// Generate CSV content with enhanced backup information
+	content := "Hash,WidgetType,OriginalFilename,CanvasID,CanvasName,WidgetID,WidgetName,BackupStatus,BackupPath,BackupSize,BackupModified,BackupCount,AllBackupPaths\n"
 
 	for _, asset := range missingAssets {
 		backupStatus := "Not Found"
 		backupPath := ""
 		backupSize := ""
 		backupModified := ""
+		backupCount := "0"
+		allBackupPaths := ""
 
 		if backupSearchResult != nil {
 			if backupFiles, found := backupSearchResult.FoundFiles[asset.Hash]; found && len(backupFiles) > 0 {
@@ -257,10 +253,18 @@ func (cmd *DiscoverCommand) generateCSVReport(missingAssets []canvus.AssetInfo, 
 				backupPath = bestBackup.Path
 				backupSize = fmt.Sprintf("%d", bestBackup.Size)
 				backupModified = bestBackup.ModifiedTime.Format("2006-01-02 15:04:05")
+				backupCount = fmt.Sprintf("%d", len(backupFiles))
+				
+				// Create semicolon-separated list of all backup paths
+				allPaths := make([]string, len(backupFiles))
+				for i, backupFile := range backupFiles {
+					allPaths[i] = backupFile.Path
+				}
+				allBackupPaths = strings.Join(allPaths, ";")
 			}
 		}
 
-		content += fmt.Sprintf("%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n",
+		content += fmt.Sprintf("%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n",
 			asset.Hash,
 			asset.WidgetType,
 			asset.OriginalFilename,
@@ -272,6 +276,8 @@ func (cmd *DiscoverCommand) generateCSVReport(missingAssets []canvus.AssetInfo, 
 			backupPath,
 			backupSize,
 			backupModified,
+			backupCount,
+			allBackupPaths,
 		)
 	}
 

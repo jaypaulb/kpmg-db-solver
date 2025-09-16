@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KPMG DB Solver - Non-Admin Version Downloads</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+            color: #333;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        .download-section {
+            margin: 30px 0;
+            padding: 20px;
+            border: 1px solid #e1e5e9;
+            border-radius: 8px;
+            background: #fff;
+        }
+        .download-link {
+            display: inline-block;
+            padding: 12px 24px;
+            background: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            margin: 10px 10px 10px 0;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+        .download-link:hover {
+            background: #0056b3;
+        }
+        .file-info {
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 5px;
+        }
+        .warning {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 20px 0;
+        }
+        .features {
+            background: #e7f3ff;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .features ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>KPMG DB Solver</h1>
+        <h2>Non-Admin Version Downloads</h2>
+        <p>Asset discovery and backup location reporting tool for Canvus Server</p>
+    </div>
+
+    <div class="warning">
+        <strong>⚠️ Important:</strong> This is a read-only version that does not require administrator privileges. 
+        Asset restoration requires administrator privileges and is not available in this version.
+    </div>
+
+    <div class="features">
+        <h3>Features</h3>
+        <ul>
+            <li>Automated asset discovery via Canvus API</li>
+            <li>Missing asset detection through filesystem comparison</li>
+            <li>Backup search and location reporting</li>
+            <li>Comprehensive reporting with detailed and CSV outputs</li>
+            <li>Parallel processing for optimal performance</li>
+            <li>No administrator privileges required (read-only access)</li>
+        </ul>
+    </div>
+
+    <div class="download-section">
+        <h3>Windows Downloads</h3>
+        
+        <h4>64-bit Windows (Recommended)</h4>
+        <a href="releases/kpmg-db-solver-nonadmin-64bit.zip" class="download-link">
+            Download 64-bit Version
+        </a>
+        <div class="file-info">kpmg-db-solver-nonadmin-64bit.zip (6.8 MB)</div>
+        <p>For Windows 10/11 64-bit and Windows Server 2016+ 64-bit</p>
+
+        <h4>32-bit Windows</h4>
+        <a href="releases/kpmg-db-solver-nonadmin-32bit.zip" class="download-link">
+            Download 32-bit Version
+        </a>
+        <div class="file-info">kpmg-db-solver-nonadmin-32bit.zip (6.7 MB)</div>
+        <p>For Windows 10/11 32-bit and Windows Server 2016+ 32-bit</p>
+    </div>
+
+    <div class="download-section">
+        <h3>Usage Instructions</h3>
+        <ol>
+            <li>Download the appropriate executable for your system</li>
+            <li>Extract the ZIP file to a folder of your choice</li>
+            <li>Run: <code>kpmg-db-solver-nonadmin.exe discover</code></li>
+            <li>Follow the interactive prompts to configure the tool</li>
+            <li>View reports in the <code>./reports/</code> folder</li>
+        </ol>
+    </div>
+
+    <div class="download-section">
+        <h3>System Requirements</h3>
+        <ul>
+            <li>Windows 10/11 or Windows Server 2016+</li>
+            <li>Read access to Canvus Server directories (no admin privileges required)</li>
+            <li>Network access to Canvus Server API</li>
+            <li>Access to Canvus Server 3.3.0</li>
+        </ul>
+    </div>
+
+    <div class="download-section">
+        <h3>Output</h3>
+        <p>The tool generates:</p>
+        <ul>
+            <li><strong>Detailed Report:</strong> Missing assets grouped by canvas with widget information and backup locations</li>
+            <li><strong>CSV Export:</strong> Comprehensive list of missing assets with backup status and file locations</li>
+            <li><strong>Backup Location Report:</strong> All backup file locations for assets that can be restored</li>
+        </ul>
+    </div>
+
+    <div class="warning">
+        <strong>Limitations:</strong> This non-admin version provides read-only access and cannot restore assets. 
+        For asset restoration, you would need administrator privileges and the full version of the tool.
+    </div>
+
+    <div style="text-align: center; margin-top: 40px; padding: 20px; color: #666; font-size: 0.9em;">
+        <p>KPMG DB Solver - Non-Admin Version</p>
+        <p>Generated: September 16, 2025</p>
+    </div>
+</body>
+</html>

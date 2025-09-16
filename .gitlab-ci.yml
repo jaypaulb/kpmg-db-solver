@@ -1,0 +1,10 @@
+pages:
+  stage: deploy
+  script:
+    - echo "Deploying public downloads to GitLab Pages"
+  artifacts:
+    paths:
+      - public
+  only:
+    - master
+    - feature/non-admin-reporting-version

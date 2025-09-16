@@ -177,7 +177,7 @@ func (cmd *DiscoverCommand) generateDetailedReport(missingAssets []canvus.AssetI
 	content := fmt.Sprintf("KPMG DB Solver - Missing Assets Report (Non-Admin Version)\n")
 	content += fmt.Sprintf("Generated: %s\n", time.Now().Format("2006-01-02 15:04:05"))
 	content += fmt.Sprintf("Total Missing Assets: %d\n", len(missingAssets))
-	
+
 	// Add backup summary
 	if backupSearchResult != nil {
 		content += fmt.Sprintf("Assets Found in Backup: %d\n", len(backupSearchResult.FoundFiles))
@@ -206,9 +206,9 @@ func (cmd *DiscoverCommand) generateDetailedReport(missingAssets []canvus.AssetI
 					if len(backupFiles) > 1 {
 						content += fmt.Sprintf("    All Backup Locations:\n")
 						for i, backupFile := range backupFiles {
-							content += fmt.Sprintf("      %d. %s (Modified: %s, Size: %d bytes)\n", 
-								i+1, backupFile.Path, 
-								backupFile.ModifiedTime.Format("2006-01-02 15:04:05"), 
+							content += fmt.Sprintf("      %d. %s (Modified: %s, Size: %d bytes)\n",
+								i+1, backupFile.Path,
+								backupFile.ModifiedTime.Format("2006-01-02 15:04:05"),
 								backupFile.Size)
 						}
 					}
@@ -254,7 +254,7 @@ func (cmd *DiscoverCommand) generateCSVReport(missingAssets []canvus.AssetInfo, 
 				backupSize = fmt.Sprintf("%d", bestBackup.Size)
 				backupModified = bestBackup.ModifiedTime.Format("2006-01-02 15:04:05")
 				backupCount = fmt.Sprintf("%d", len(backupFiles))
-				
+
 				// Create semicolon-separated list of all backup paths
 				allPaths := make([]string, len(backupFiles))
 				for i, backupFile := range backupFiles {
